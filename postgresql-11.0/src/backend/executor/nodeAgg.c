@@ -237,6 +237,7 @@
 #include "utils/syscache.h"
 #include "utils/tuplesort.h"
 #include "utils/datum.h"
+#include "utils/migrate_schema.h"
 
 
 static void select_current_set(AggState *aggstate, int setno, bool is_hash);
@@ -293,7 +294,7 @@ static int find_compatible_pertrans(AggState *aggstate, Aggref *newagg,
 						 Oid aggserialfn, Oid aggdeserialfn,
 						 Datum initValue, bool initValueIsNull,
 						 List *transnos);
-
+static bool migrate_tuple(TupleTableSlot *outerslot); 
 
 /*
  * Select the current grouping set; affects current_set and
@@ -1734,6 +1735,18 @@ agg_retrieve_direct(AggState *aggstate)
 			if (aggstate->grp_firstTuple == NULL)
 			{
 				outerslot = fetch_input_tuple(aggstate);
+
+				if (!TupIsNull(outerslot)) {
+					if (migrateflag) {
+						if(!migrate_tuple(outerslot))
+							continue;
+						else
+						{
+							++tuplemigratecount;
+						}
+					}
+				}
+
 				if (!TupIsNull(outerslot))
 				{
 					/*
@@ -1831,6 +1844,18 @@ agg_retrieve_direct(AggState *aggstate)
 					ResetExprContext(tmpcontext);
 
 					outerslot = fetch_input_tuple(aggstate);
+
+					if (!TupIsNull(outerslot)) {
+						if (migrateflag) {
+							if(!migrate_tuple(outerslot))
+								continue;
+							else
+							{
+								++tuplemigratecount;
+							}
+						}
+					}
+
 					if (TupIsNull(outerslot))
 					{
 						/* no more outer-plan tuples available */
@@ -1901,6 +1926,91 @@ agg_retrieve_direct(AggState *aggstate)
 	return NULL;
 }
 
+static bool migrate_tuple(TupleTableSlot *outerslot)
+{
+	bool k1isNull, k2isNull, k3isNull;
+	uint8 mByte, lmByte;
+
+	uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+								outerslot->tts_tupleDescriptor, &k1isNull));
+	uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+								outerslot->tts_tupleDescriptor, &k2isNull));
+	uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+								outerslot->tts_tupleDescriptor, &k3isNull));
+
+	// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
+
+	if (localagghashtable_ip_lookup(k1, k2, k3, &mByte, 0)) {
+		// key migration in-progress by the current transaction
+		return true;
+	}
+
+	if (localagghashtable_ip_lookup(k1, k2, k3, &mByte, 1)) {
+		// key migration in-progress by another transaction
+		return false;
+	}
+
+	if (migrateagghashtable_lookup(k1, k2, k3, &mByte))
+	{
+		/*
+		 * found = true: key already exist in the global hash table,
+		 *  The value corresponding to the key is copied into mByte.
+		 * 
+		 * if found = true, then
+		 * mByte = 0, key migration in-progress
+		 * mByte = 1, key has been migrated
+		 * mByte = 2, key migration is aborted
+		 */
+		lmByte = 1;
+		if (mByte == 0) {
+			count_inprogress++;
+			localagghashtable_ip_insert(k1, k2, k3, lmByte, lmByte);
+		} else if (mByte == 2) {
+			lmByte = 0;
+			migrateagghashtable_insert(k1, k2, k3, &lmByte, true);
+			localagghashtable_ip_insert(k1, k2, k3, lmByte, lmByte);
+			return true;
+		}
+
+		return false;
+	}
+	else
+	{
+		mByte = 0;
+		if (migrateagghashtable_insert(k1, k2, k3, &mByte, false))
+		{
+			lmByte = 1;
+			if (mByte == 0) {
+				count_inprogress++;
+				localagghashtable_ip_insert(k1, k2, k3, lmByte, lmByte);
+			}  else if (mByte == 2) {
+				lmByte = 0;
+				migrateagghashtable_insert(k1, k2, k3, &lmByte, true);
+				localagghashtable_ip_insert(k1, k2, k3, lmByte, lmByte);
+				return true;
+			}
+
+			return false;
+		}
+		else
+		{
+			/* found = false: key did not already exist in the global hash
+			 * table and the key (with the value) is inserted into the global
+			 * hash table. Thus, if found = false, then the
+			 * migration of the key is in-progress by the current process.
+			 */
+
+			lmByte = 0;
+
+			localagghashtable_ip_insert(k1, k2, k3, lmByte, lmByte);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 /*
  * ExecAgg for hashed case: read input and build hash table
  */
@@ -1919,6 +2029,15 @@ agg_fill_hash_table(AggState *aggstate)
 		outerslot = fetch_input_tuple(aggstate);
 		if (TupIsNull(outerslot))
 			break;
+
+		if (migrateflag) {
+			if(!migrate_tuple(outerslot))
+				continue;
+			else
+			{
+				++tuplemigratecount;
+			}
+		}
 
 		/* set up for lookup_hash_entries and advance_aggregates */
 		tmpcontext->ecxt_outertuple = outerslot;

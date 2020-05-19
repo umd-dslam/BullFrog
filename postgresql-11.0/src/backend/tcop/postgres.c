@@ -78,6 +78,7 @@
 #include "utils/timeout.h"
 #include "utils/timestamp.h"
 #include "mb/pg_wchar.h"
+#include "utils/migrate_schema.h"
 
 
 /* ----------------
@@ -99,7 +100,6 @@ int			max_stack_depth = 100;
 
 /* wait N seconds to allow attach from a debugger */
 int			PostAuthDelay = 0;
-
 
 
 /* ----------------
@@ -195,6 +195,7 @@ static void drop_unnamed_stmt(void);
 static void log_disconnections(int code, Datum arg);
 static void enable_statement_timeout(void);
 static void disable_statement_timeout(void);
+static void post_query_tasks(void);
 
 
 /* ----------------------------------------------------------------
@@ -881,6 +882,70 @@ pg_plan_queries(List *querytrees, int cursorOptions, ParamListInfo boundParams)
 	return stmt_list;
 }
 
+static void
+post_query_tasks(void)
+{
+	HASH_SEQ_STATUS status;
+	LocalAggHashValue *hvalue;
+	MigrateAggHashKey *key;
+	uint8 mByte;
+
+	if (migrateflag)
+	{
+		/* iterate over the local hash table, and identify
+		 * all keys which are migrated by the current process:
+		 * i.e. all such values that are in-progress(0) by the
+		 * current process.
+		 * for all such keys set the corresponding keys in the
+		 * global hash table to migrate (1)
+		 * for keys which are migrated by other process, i.e.
+		 * in progress(1) by other process, wait for them until
+		 * the value in the global hash table changes from 0 to 1.
+		 */
+		if (tuplemigratecount > 0) {
+			hash_seq_init(&status, LocalIPAggHashTable0);
+			while ((hvalue = (LocalAggHashValue *) hash_seq_search(&status)) != NULL)
+			{
+				mByte = 1;
+				uint32 k1 = hvalue->key.key1;
+				uint32 k2 = hvalue->key.key2;
+				uint32 k3 = hvalue->key.key3;
+				migrateagghashtable_insert(k1, k2, k3, &mByte, true);
+			}
+		}
+
+		while (count_inprogress > 0)
+		{
+			hash_seq_init(&status, LocalIPAggHashTable1);
+			while ((hvalue = (LocalAggHashValue *) hash_seq_search(&status)) != NULL)
+			{
+
+				uint32 k1 = hvalue->key.key1;
+				uint32 k2 = hvalue->key.key2;
+				uint32 k3 = hvalue->key.key3;
+				if (migrateagghashtable_lookup(k1, k2, k3, &mByte))
+				{
+					if (mByte == 1)
+					{
+						--count_inprogress;
+					}
+				}
+				if (count_inprogress == 0)
+				{
+					hash_seq_term(&status);
+					break;
+				}
+			}
+		}
+
+		hash_destroy(LocalIPAggHashTable0);
+		hash_destroy(LocalIPAggHashTable1);
+		tuplemigratecount = 0;
+		count_inprogress = 0;
+		migrateflag = false;
+	}
+}
+
 
 /*
  * exec_simple_query
@@ -1130,6 +1195,8 @@ exec_simple_query(const char *query_string)
 		receiver->rDestroy(receiver);
 
 		PortalDrop(portal, false);
+
+		post_query_tasks();
 
 		if (lnext(parsetree_item) == NULL)
 		{
@@ -1526,6 +1593,11 @@ exec_bind_message(StringInfo input_message)
 			ereport(ERROR,
 					(errcode(ERRCODE_UNDEFINED_PSTATEMENT),
 					 errmsg("unnamed prepared statement does not exist")));
+	}
+
+	if (strncmp(psrc->query_string, " insert into orderline_agg", 26) == 0) {
+		migrateflag = true;
+		InitLocalIPAggHashTable();
 	}
 
 	/*
@@ -2019,6 +2091,8 @@ exec_execute_message(const char *portal_name, long max_rows)
 						  completionTag);
 
 	receiver->rDestroy(receiver);
+
+	post_query_tasks();
 
 	if (completed)
 	{
