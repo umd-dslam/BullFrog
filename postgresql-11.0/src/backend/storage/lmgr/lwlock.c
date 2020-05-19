@@ -451,6 +451,12 @@ InitializeLWLocks(void)
 	for (id = 0; id < NUM_PREDICATELOCK_PARTITIONS; id++, lock++)
 		LWLockInitialize(&lock->lock, LWTRANCHE_PREDICATE_LOCK_MANAGER);
 
+	/* Initialize bitmap LWLocks in main array */
+	lock = MainLWLockArray + NUM_INDIVIDUAL_LWLOCKS +
+		NUM_BUFFER_PARTITIONS + NUM_LOCK_PARTITIONS + NUM_PREDICATELOCK_PARTITIONS;
+	for (id = 0; id < NUM_MIGRATE_BITMAP_LOCKS; id++, lock++)
+		LWLockInitialize(&lock->lock, LWTRANCHE_MIGRATE_BITMAP);
+
 	/* Initialize named tranches. */
 	if (NamedLWLockTrancheRequests > 0)
 	{
@@ -508,6 +514,7 @@ RegisterLWLockTranches(void)
 	LWLockRegisterTranche(LWTRANCHE_LOCK_MANAGER, "lock_manager");
 	LWLockRegisterTranche(LWTRANCHE_PREDICATE_LOCK_MANAGER,
 						  "predicate_lock_manager");
+	LWLockRegisterTranche(LWTRANCHE_MIGRATE_BITMAP, "migrate_bitmap");
 	LWLockRegisterTranche(LWTRANCHE_PARALLEL_QUERY_DSA,
 						  "parallel_query_dsa");
 	LWLockRegisterTranche(LWTRANCHE_SESSION_DSA,

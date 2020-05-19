@@ -203,6 +203,7 @@
 #include "utils/rel.h"
 #include "utils/snapmgr.h"
 #include "utils/tqual.h"
+#include "utils/migrate_schema.h"
 
 /* Uncomment the next line to test the graceful degradation code. */
 /* #define TEST_OLDSERXID */
@@ -466,6 +467,7 @@ static void FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer);
 static void OnConflict_CheckForSerializationFailure(const SERIALIZABLEXACT *reader,
 										SERIALIZABLEXACT *writer);
 
+static void txn_error_handling();
 
 /*------------------------------------------------------------------------*/
 
@@ -4469,6 +4471,23 @@ FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer)
 		SetRWConflict(reader, writer);
 }
 
+static void txn_error_handling()
+{
+	if (migrateflag && InProgLocalList0 != NIL) {
+		ListCell *cell = NULL;
+		foreach(cell, InProgLocalList0)
+		{
+			resetlockbit(GlobalBitmap, lfirst_int(cell));
+		}
+		tuplemigratecount = 0;
+		migrateflag = false;
+		pg_list_free(InProgLocalList0, false);
+		pg_list_free(InProgLocalList1, false);
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+	}
+}
+
 /*----------------------------------------------------------------------------
  * We are about to add a RW-edge to the dependency graph - check that we don't
  * introduce a dangerous structure by doing so, and abort one of the
@@ -4623,6 +4642,7 @@ OnConflict_CheckForSerializationFailure(const SERIALIZABLEXACT *reader,
 		 */
 		if (MySerializableXact == writer)
 		{
+			txn_error_handling();
 			LWLockRelease(SerializableXactHashLock);
 			ereport(ERROR,
 					(errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
