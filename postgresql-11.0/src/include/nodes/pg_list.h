@@ -207,6 +207,7 @@ list_length(const List *l)
 
 extern List *lappend(List *list, void *datum);
 extern List *lappend_int(List *list, int datum);
+extern List *pg_lappend_int(List *list, int datum);
 extern List *lappend_oid(List *list, Oid datum);
 
 extern ListCell *lappend_cell(List *list, ListCell *prev, void *datum);
@@ -265,6 +266,7 @@ extern List *list_concat_unique_oid(List *list1, List *list2);
 
 extern void list_free(List *list);
 extern void list_free_deep(List *list);
+extern void pg_list_free(List *list, bool deep);
 
 extern List *list_copy(const List *list);
 extern List *list_copy_tail(const List *list, int nskip);

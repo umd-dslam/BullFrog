@@ -78,6 +78,7 @@
 #include "utils/timeout.h"
 #include "utils/timestamp.h"
 #include "mb/pg_wchar.h"
+#include "utils/migrate_schema.h"
 
 
 /* ----------------
@@ -99,7 +100,6 @@ int			max_stack_depth = 100;
 
 /* wait N seconds to allow attach from a debugger */
 int			PostAuthDelay = 0;
-
 
 
 /* ----------------
@@ -195,6 +195,7 @@ static void drop_unnamed_stmt(void);
 static void log_disconnections(int code, Datum arg);
 static void enable_statement_timeout(void);
 static void disable_statement_timeout(void);
+static void post_query_tasks(void);
 
 
 /* ----------------------------------------------------------------
@@ -881,6 +882,40 @@ pg_plan_queries(List *querytrees, int cursorOptions, ParamListInfo boundParams)
 	return stmt_list;
 }
 
+static void post_query_tasks(void)
+{
+	/* perform post query tasks */
+	LWLock *bitmapLock;
+	uint64 *lbitmap = LocalBitmap;
+
+	if (migrateflag)
+	{
+		ListCell *cell = NULL;
+		foreach(cell, InProgLocalList0) 
+		{
+			setmigratebit(GlobalBitmap, lfirst_int(cell));
+		}
+
+		int volatile size = list_length(InProgLocalList1);
+		while (size > 0) {
+			foreach(cell, InProgLocalList1) 
+			{
+				if (getmigratebit(GlobalBitmap, lfirst_int(cell))) {
+					size--;
+				}
+			}
+		}
+
+		pg_list_free(InProgLocalList0, false);
+		pg_list_free(InProgLocalList1, false);
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+		tuplemigratecount = 0;
+		migrateflag = false;
+	}
+}
+
+
 
 /*
  * exec_simple_query
@@ -1130,6 +1165,8 @@ exec_simple_query(const char *query_string)
 		receiver->rDestroy(receiver);
 
 		PortalDrop(portal, false);
+
+		post_query_tasks();
 
 		if (lnext(parsetree_item) == NULL)
 		{
@@ -1526,6 +1563,12 @@ exec_bind_message(StringInfo input_message)
 			ereport(ERROR,
 					(errcode(ERRCODE_UNDEFINED_PSTATEMENT),
 					 errmsg("unnamed prepared statement does not exist")));
+	}
+
+	if (strncmp(psrc->query_string, " insert into customer_proj", 26) == 0) {
+		migrateflag = true;
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
 	}
 
 	/*
@@ -2019,6 +2062,8 @@ exec_execute_message(const char *portal_name, long max_rows)
 						  completionTag);
 
 	receiver->rDestroy(receiver);
+
+	post_query_tasks();
 
 	if (completed)
 	{

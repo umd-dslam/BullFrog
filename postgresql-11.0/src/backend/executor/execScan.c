@@ -21,8 +21,67 @@
 #include "executor/executor.h"
 #include "miscadmin.h"
 #include "utils/memutils.h"
+#include "utils/migrate_schema.h"
 
+bool MigrateTuple(TupleTableSlot *slot)
+{
+	if (slot->tts_tuple == NULL | slot->tts_tuple->t_len == 0)
+	{
+		return true;
+	}
 
+	LWLock *bitmapLock;
+	ItemPointerData lctid = slot->tts_tuple->t_self;
+	uint32 blockId	= (uint32) ItemPointerGetBlockNumber (&lctid);
+	uint32 offset 	= (uint32) ItemPointerGetOffsetNumber(&lctid);
+
+	uint32 pagesize = NUMTUPLESPERPAGE;
+	uint32 idx = blockId * pagesize + offset;
+	uint32 eid = idx - 1;
+
+	uint32 wordid 		= getwordid(eid);
+	uint32 lockbitid 	= getlockbitid(eid);
+	uint32 migratebitid = getmigratebitid(eid);
+
+	// printf("blockId: %d, pageSize: %d, offset: %d\n", blockId, pagesize, offset);
+	// printf("eid: %d, wordid: %d, lockbitid: %d, migratebitid: %d\n", eid, wordid, lockbitid, migratebitid);
+
+	if (!getkthbit(GlobalBitmap[wordid], migratebitid))
+	{
+		if (getkthbit(GlobalBitmap[wordid], lockbitid))
+		{
+			InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);
+			return false;
+		}
+
+		bitmapLock = MigrateBitmapPartitionLock(eid);
+		LWLockAcquire(bitmapLock, LW_EXCLUSIVE);
+
+		if (!getkthbit(GlobalBitmap[wordid], migratebitid))
+		{
+			if (!getkthbit(GlobalBitmap[wordid], lockbitid))
+			{
+				GlobalBitmap[wordid] |= ((uint64)1 << lockbitid);
+				LWLockRelease(bitmapLock);
+
+				InProgLocalList0 = pg_lappend_int(InProgLocalList0, eid);
+				return true;
+			}
+			else
+			{
+				LWLockRelease(bitmapLock);
+
+				InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);	
+				return false;
+			}
+		}
+		else
+		{
+			LWLockRelease(bitmapLock);
+		}
+	}
+	return false;
+}
 
 /*
  * ExecScanFetch -- check interrupts & fetch next potential tuple
@@ -141,8 +200,24 @@ ExecScan(ScanState *node,
 	 */
 	if (!qual && !projInfo)
 	{
+		TupleTableSlot *slot;
+
 		ResetExprContext(econtext);
-		return ExecScanFetch(node, accessMtd, recheckMtd);
+		slot = ExecScanFetch(node, accessMtd, recheckMtd);
+
+
+		if (migrateflag)
+		{
+			if (MigrateTuple(slot))
+			{
+				++tuplemigratecount;
+				return slot;
+			}
+		}
+		else
+		{
+			return slot;
+		}
 	}
 
 	/*
@@ -189,23 +264,38 @@ ExecScan(ScanState *node,
 		 */
 		if (qual == NULL || ExecQual(qual, econtext))
 		{
-			/*
-			 * Found a satisfactory scan tuple.
-			 */
-			if (projInfo)
+			if (migrateflag)
 			{
-				/*
-				 * Form a projection tuple, store it in the result tuple slot
-				 * and return it.
-				 */
-				return ExecProject(projInfo);
+				if (MigrateTuple(slot))
+				{
+					++tuplemigratecount;
+
+					if (projInfo)
+						return ExecProject(projInfo);
+					else
+						return slot;
+				}
 			}
 			else
 			{
 				/*
-				 * Here, we aren't projecting, so just return scan tuple.
+				 * Found a satisfactory scan tuple.
 				 */
-				return slot;
+				if (projInfo)
+				{
+					/*
+					 * Form a projection tuple, store it in the result tuple slot
+					 * and return it.
+					 */
+					return ExecProject(projInfo);
+				}
+				else
+				{
+					/*
+					 * Here, we aren't projecting, so just return scan tuple.
+					 */
+					return slot;
+				}
 			}
 		}
 		else
