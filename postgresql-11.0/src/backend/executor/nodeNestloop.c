@@ -25,6 +25,8 @@
 #include "executor/nodeNestloop.h"
 #include "miscadmin.h"
 #include "utils/memutils.h"
+#include "utils/migrate_schema.h"
+#include "access/htup_details.h"
 
 
 /* ----------------------------------------------------------------
@@ -57,6 +59,83 @@
  *			   are prepared to return the first tuple.
  * ----------------------------------------------------------------
  */
+
+static bool migrate_tuple(uint32 k1, uint32 k2, uint32 k3, uint32 k4, uint32 k5, uint32 k6) {
+	uint8 mByte, lmByte;
+
+	if (localjoinhashtable_lookup(k1, k2, k3, k4, k5, k6, &mByte, 1)) {
+		return false;
+	}
+
+	if (localjoinhashtable_lookup(k1, k2, k3, k4, k5, k6, &mByte, 0)) {
+		return false;
+	}
+
+	if (migratejoinhashtable_lookup(k1, k2, k3, k4, k5, k6, &mByte))
+	{
+		/* found = true: key already exist in the global hash table,
+		* The value corresponding to the key is copied into mByte.
+		* 
+		* if found = true, then
+		* mByte = 0, key migration in-progress by some other process
+		* mByte = 1, key has been migrated
+		* mByte = 2, key migration is aborted by some other process
+		*/
+		lmByte = 1;
+		if (mByte == 0) {
+			count_inprogress++;
+			localjoinhashtable_insert(k1, k2, k3, k4, k5, k6, lmByte, lmByte);
+		} else if (mByte == 2) {
+			lmByte = 0;
+			migratejoinhashtable_insert(k1, k2, k3, k4, k5, k6, &lmByte, true);
+			localjoinhashtable_insert(k1, k2, k3, k4, k5, k6, lmByte, lmByte);
+			return true;
+		}
+
+		return false;
+	}
+	else
+	{
+		mByte = 0;
+		if (migratejoinhashtable_insert(k1, k2, k3, k4, k5, k6, &mByte, false))
+		{
+			/* found = true: key already exist in the global hash table,
+			* and therefore the key was already inserted by some other process
+			* in the hash table. In this case, the value corresponding to the
+			* key is copied into mByte. Thus, if found = true and mByte = 0,
+			* then the migration of the key is in-progress by some other process
+			*/
+			lmByte = 1;
+			if (mByte == 0) {
+				count_inprogress++;
+				localjoinhashtable_insert(k1, k2, k3, k4, k5, k6, lmByte, lmByte);
+			} else if (mByte == 2) {
+				lmByte = 0;
+				migratejoinhashtable_insert(k1, k2, k3, k4, k5, k6, &lmByte, true);
+				localjoinhashtable_insert(k1, k2, k3, k4, k5, k6, lmByte, lmByte);
+				return true;
+			}
+
+			return false;
+		}
+		else
+		{
+			/* found = false: key did not already exist in the global hash
+			* table and the key (with the value) is inserted into the global
+			* hash table. Thus, if found = false, then the
+			* migration of the key is in-progress by the current process.
+			*/
+
+			lmByte = 0;
+
+			localjoinhashtable_insert(k1, k2, k3, k4, k5, k6, lmByte, lmByte);
+
+			return true;
+		}
+	}
+}
+
+
 static TupleTableSlot *
 ExecNestLoop(PlanState *pstate)
 {
@@ -209,7 +288,33 @@ ExecNestLoop(PlanState *pstate)
 		 * Only the joinquals determine MatchedOuter status, but all quals
 		 * must pass to actually return the tuple.
 		 */
+
 		ENL1_printf("testing qualification");
+
+		bool k1isNull, k2isNull, k3isNull, k4isNull, k5isNull, k6isNull;
+
+		Datum  d1 = heap_getattr(outerTupleSlot->tts_tuple, 1,
+					outerTupleSlot->tts_tupleDescriptor, &k1isNull);
+		Datum  d2 = heap_getattr(outerTupleSlot->tts_tuple, 2,
+					outerTupleSlot->tts_tupleDescriptor, &k2isNull);
+		Datum  d3 = heap_getattr(outerTupleSlot->tts_tuple, 3,
+					outerTupleSlot->tts_tupleDescriptor, &k3isNull);
+		Datum  d4 = heap_getattr(outerTupleSlot->tts_tuple, 4,
+					outerTupleSlot->tts_tupleDescriptor, &k4isNull);
+		Datum  d5 = heap_getattr(innerTupleSlot->tts_tuple, 1,
+					innerTupleSlot->tts_tupleDescriptor, &k5isNull);
+		Datum  d6 = heap_getattr(innerTupleSlot->tts_tuple, 2,
+					innerTupleSlot->tts_tupleDescriptor, &k6isNull);
+
+		uint32 t1 = DatumGetUInt32(d1);
+		uint32 t2 = DatumGetUInt32(d2);
+		uint32 t3 = DatumGetUInt32(d3);
+		uint32 t4 = DatumGetUInt32(d4);
+		uint32 t5 = DatumGetUInt32(d5);
+		uint32 t6 = DatumGetUInt32(d6);
+
+		// printf("(ol_w_id, ol_d_id, ol_o_id, ol_number, s_w_id, s_i_id)=(%d, %d, %d, %d, %d, %d)\n",
+		// 	t1, t2, t3, t4, t5, t6);
 
 		if (ExecQual(joinqual, econtext))
 		{
@@ -237,8 +342,15 @@ ExecNestLoop(PlanState *pstate)
 				 * slot containing the result tuple using ExecProject().
 				 */
 				ENL1_printf("qualification succeeded, projecting tuple");
-
-				return ExecProject(node->js.ps.ps_ProjInfo);
+				if (migrateflag) {
+					if (migrate_tuple(t1, t2, t3, t4, t5, t6))
+					{
+						++tuplemigratecount;
+						return ExecProject(node->js.ps.ps_ProjInfo);
+					}
+				} else {
+					return ExecProject(node->js.ps.ps_ProjInfo);
+				}
 			}
 			else
 				InstrCountFiltered2(node, 1);

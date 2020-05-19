@@ -203,6 +203,7 @@
 #include "utils/rel.h"
 #include "utils/snapmgr.h"
 #include "utils/tqual.h"
+#include "utils/migrate_schema.h"
 
 /* Uncomment the next line to test the graceful degradation code. */
 /* #define TEST_OLDSERXID */
@@ -465,7 +466,7 @@ static void CheckTargetForConflictsIn(PREDICATELOCKTARGETTAG *targettag);
 static void FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer);
 static void OnConflict_CheckForSerializationFailure(const SERIALIZABLEXACT *reader,
 										SERIALIZABLEXACT *writer);
-
+static void txn_error_handling();
 
 /*------------------------------------------------------------------------*/
 
@@ -4469,6 +4470,32 @@ FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer)
 		SetRWConflict(reader, writer);
 }
 
+static void txn_error_handling() {
+	if (migrateflag && LocalJoinHashTable0) {
+		HASH_SEQ_STATUS status;
+		LocalJoinHashValue *hvalue;
+		uint8 mByte;
+		hash_seq_init(&status, LocalJoinHashTable0);
+		while ((hvalue = (LocalJoinHashValue *) hash_seq_search(&status)) != NULL)
+		{
+			mByte = 2; // abort state
+			uint32 k1 = hvalue->key.key1;
+			uint32 k2 = hvalue->key.key2;
+			uint32 k3 = hvalue->key.key3;
+			uint32 k4 = hvalue->key.key4;
+			uint32 k5 = hvalue->key.key5;
+			uint32 k6 = hvalue->key.key6;
+			migratejoinhashtable_insert(k1, k2, k3, k4, k5, k6, &mByte, true);
+		}
+
+		count_inprogress = 0;
+		tuplemigratecount = 0;
+		hash_destroy(LocalJoinHashTable0);
+		hash_destroy(LocalJoinHashTable1);
+		migrateflag = false;
+	}
+}
+
 /*----------------------------------------------------------------------------
  * We are about to add a RW-edge to the dependency graph - check that we don't
  * introduce a dangerous structure by doing so, and abort one of the
@@ -4623,6 +4650,7 @@ OnConflict_CheckForSerializationFailure(const SERIALIZABLEXACT *reader,
 		 */
 		if (MySerializableXact == writer)
 		{
+			txn_error_handling();
 			LWLockRelease(SerializableXactHashLock);
 			ereport(ERROR,
 					(errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
