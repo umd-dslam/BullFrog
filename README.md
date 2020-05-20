@@ -1,4 +1,5 @@
-# Darwin
+# Bullfrog
+
 Online Schema Evolution: A Lazy Approach
 
 - Projection Migration ([branch](https://github.com/DSLAM-UMD/Darwin))
