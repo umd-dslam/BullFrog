@@ -1,4 +1,4 @@
-# Bullfrog
+# BullFrog
 
 <img src="https://i.postimg.cc/SRP8NbN3/Wechat-IMG647.png" width="12%" height="12%">
 
