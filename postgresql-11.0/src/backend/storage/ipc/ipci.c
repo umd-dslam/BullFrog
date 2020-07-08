@@ -156,7 +156,7 @@ CreateSharedMemoryAndSemaphores(bool makePrivate, int port)
 		 * adding 1024MB of additonal size for accommodating the shared
 		 * memory data structures
 		 */
-		size = add_size(size, 1024000000);
+		size = add_size(size, 2048000000);
 
 #ifdef EXEC_BACKEND
 		size = add_size(size, ShmemBackendArraySize());

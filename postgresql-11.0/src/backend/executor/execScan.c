@@ -46,22 +46,22 @@ bool MigrateTuple(TupleTableSlot *slot)
 	// printf("blockId: %d, pageSize: %d, offset: %d\n", blockId, pagesize, offset);
 	// printf("eid: %d, wordid: %d, lockbitid: %d, migratebitid: %d\n", eid, wordid, lockbitid, migratebitid);
 
-	if (!getkthbit(GlobalBitmap[wordid], migratebitid))
+	if (!getkthbit(PartialBitmap[wordid], migratebitid))
 	{
-		if (getkthbit(GlobalBitmap[wordid], lockbitid))
+		if (getkthbit(PartialBitmap[wordid], lockbitid))
 		{
 			InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);
 			return false;
 		}
 
-		bitmapLock = MigrateBitmapPartitionLock(eid);
+		bitmapLock = MigrateBitmapPartitionLock(eid, BitmapNum);
 		LWLockAcquire(bitmapLock, LW_EXCLUSIVE);
 
-		if (!getkthbit(GlobalBitmap[wordid], migratebitid))
+		if (!getkthbit(PartialBitmap[wordid], migratebitid))
 		{
-			if (!getkthbit(GlobalBitmap[wordid], lockbitid))
+			if (!getkthbit(PartialBitmap[wordid], lockbitid))
 			{
-				GlobalBitmap[wordid] |= ((uint64)1 << lockbitid);
+				PartialBitmap[wordid] |= ((uint64)1 << lockbitid);
 				LWLockRelease(bitmapLock);
 
 				InProgLocalList0 = pg_lappend_int(InProgLocalList0, eid);

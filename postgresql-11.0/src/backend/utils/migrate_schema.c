@@ -27,6 +27,10 @@ uint32  count_inprogress    = 0;
 /* global bitmap for indicating migration status of tuples */
 uint64  *GlobalBitmap       = NULL;
 
+/* bitmapNum for indicating bitmap tables */
+uint8 BitmapNum = 0;
+uint64 *PartialBitmap = NULL;
+
 List    *InProgLocalList0;
 List    *InProgLocalList1;
 
@@ -113,11 +117,11 @@ InitGlobalBitmap(void)
 {
 	bool found;
 	/* allocate bitmap from shared memory */
-	GlobalBitmap = (uint64 *) ShmemInitStruct("Global Bitmap", (BITMAPSIZE * sizeof(uint64)), &found);
+	GlobalBitmap = (uint64 *) ShmemInitStruct("Global Bitmap", (2 * BITMAPSIZE * sizeof(uint64)), &found);
 
 	if (!found)
 	{
 		printf("Shared Global Bitmap created!\n");
-		memset(GlobalBitmap, 0, (BITMAPSIZE * sizeof(uint64)));
+		memset(GlobalBitmap, 0, (2 * BITMAPSIZE * sizeof(uint64)));
 	}
 }

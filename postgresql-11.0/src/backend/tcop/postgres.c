@@ -893,14 +893,14 @@ static void post_query_tasks(void)
 		ListCell *cell = NULL;
 		foreach(cell, InProgLocalList0) 
 		{
-			setmigratebit(GlobalBitmap, lfirst_int(cell));
+			setmigratebit(PartialBitmap, lfirst_int(cell));
 		}
 
 		int volatile size = list_length(InProgLocalList1);
 		while (size > 0) {
 			foreach(cell, InProgLocalList1) 
 			{
-				if (getmigratebit(GlobalBitmap, lfirst_int(cell))) {
+				if (getmigratebit(PartialBitmap, lfirst_int(cell))) {
 					size--;
 				}
 			}
@@ -1565,10 +1565,18 @@ exec_bind_message(StringInfo input_message)
 					 errmsg("unnamed prepared statement does not exist")));
 	}
 
-	if (strncmp(psrc->query_string, " insert into customer_proj", 26) == 0) {
+	if (strncmp(psrc->query_string, " insert into customer_proj1", 27) == 0) {
 		migrateflag = true;
 		InProgLocalList0 = NIL;
 		InProgLocalList1 = NIL;
+		BitmapNum = 0;
+		PartialBitmap = GlobalBitmap;
+	} else if (strncmp(psrc->query_string, " insert into customer_proj2", 27) == 0) {
+		migrateflag = true;
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+		BitmapNum = 1;
+		PartialBitmap = GlobalBitmap + BITMAPSIZE;
 	}
 
 	/*
