@@ -23,5 +23,5 @@ Three main types of schema migrations in the experiments:
   
 ## TPC-C Benchmark
 
-If you have any questions about schema migration on TPC-C Benchmark, feel free to contact me: `gangliao@cs.umd.edu`.
+If you have any questions about schema migration on TPC-C Benchmark, feel free to contact us.
 
