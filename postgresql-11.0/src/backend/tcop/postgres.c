@@ -885,22 +885,21 @@ pg_plan_queries(List *querytrees, int cursorOptions, ParamListInfo boundParams)
 static void post_query_tasks(void)
 {
 	/* perform post query tasks */
-	LWLock *bitmapLock;
-	uint64 *lbitmap = LocalBitmap;
-
 	if (migrateflag)
 	{
 		ListCell *cell = NULL;
-		foreach(cell, InProgLocalList0) 
+		foreach(cell, InProgLocalList0)
 		{
 			setmigratebit(PartialBitmap, lfirst_int(cell));
 		}
 
 		int volatile size = list_length(InProgLocalList1);
-		while (size > 0) {
-			foreach(cell, InProgLocalList1) 
+		while (size > 0)
+		{
+			foreach(cell, InProgLocalList1)
 			{
-				if (getmigratebit(PartialBitmap, lfirst_int(cell))) {
+				if (getmigratebit(PartialBitmap, lfirst_int(cell)))
+				{
 					size--;
 				}
 			}
