@@ -4477,7 +4477,7 @@ static void txn_error_handling()
 		ListCell *cell = NULL;
 		foreach(cell, InProgLocalList0)
 		{
-			resetlockbit(GlobalBitmap, lfirst_int(cell));
+			resetlockbit(PartialBitmap, lfirst_int(cell));
 		}
 		tuplemigratecount = 0;
 		migrateflag = false;

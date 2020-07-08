@@ -85,6 +85,8 @@ extern uint64 tuplemigratecount;
 extern uint32 count_inprogress;
 
 extern uint64 *GlobalBitmap;
+extern uint64 *PartialBitmap;
+extern uint8 BitmapNum;
 
 extern List *InProgLocalList0;
 extern List *InProgLocalList1;
@@ -94,8 +96,9 @@ extern void InitGlobalBitmap(void);
 #define MigrateBitmapPartition(hashcode) \
     ((hashcode) % NUM_MIGRATE_BITMAP_LOCKS)
 
-#define MigrateBitmapPartitionLock(hashcode) \
-    (&MainLWLockArray[MIGRATE_BITMAP_OFFSET + MigrateBitmapPartition(hashcode)].lock)
+#define MigrateBitmapPartitionLock(hashcode, i) \
+    (&MainLWLockArray[MIGRATE_BITMAP_OFFSET + \
+    MigrateBitmapPartition(hashcode) + i*NUM_MIGRATE_BITMAP_LOCKS].lock)
 
 #define MigrateBitmapLockByIndex(i) \
 	  (&MainLWLockArray[MIGRATE_BITMAP_OFFSET + (i)].lock)
