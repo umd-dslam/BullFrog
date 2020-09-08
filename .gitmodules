@@ -1,3 +1,0 @@
-[submodule "oltpbench"]
-	path = oltpbench
-	url = https://github.com/DSLAM-UMD/oltpbench
