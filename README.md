@@ -1,7 +1,4 @@
-# BullFrog
-
-
-> Online Schema Evolution via Lazy Evaluation
+## BullFrog: Online Schema Evolution via Lazy Evaluation
 
 ## Introduction
 
