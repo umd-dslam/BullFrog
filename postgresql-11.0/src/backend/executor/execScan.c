@@ -22,8 +22,9 @@
 #include "miscadmin.h"
 #include "utils/memutils.h"
 #include "utils/migrate_schema.h"
+#include "access/htup_details.h"
 
-bool MigrateTuple(TupleTableSlot *slot)
+bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 {
 	if (slot->tts_tuple == NULL | slot->tts_tuple->t_len == 0)
 	{
@@ -31,14 +32,9 @@ bool MigrateTuple(TupleTableSlot *slot)
 	}
 
 	LWLock *bitmapLock;
-	ItemPointerData lctid = slot->tts_tuple->t_self;
-	uint32 blockId	= (uint32) ItemPointerGetBlockNumber (&lctid);
-	uint32 offset 	= (uint32) ItemPointerGetOffsetNumber(&lctid);
-
-	uint32 pagesize = NUMTUPLESPERPAGE;
-	uint32 idx = blockId * pagesize + offset;
-	uint32 eid = idx - 1;
-
+	// FIXME: k1: c_w_id = 50, k2: c_d_id = 10, k3: c_id = 3000
+	// page size = 300
+	uint32 eid = (k1 * 10 + k2) * 10 + k3 / 300;
 	uint32 wordid 		= getwordid(eid);
 	uint32 lockbitid 	= getlockbitid(eid);
 	uint32 migratebitid = getmigratebitid(eid);
@@ -208,7 +204,18 @@ ExecScan(ScanState *node,
 
 		if (migrateflag)
 		{
-			if (MigrateTuple(slot))
+			// Get query's predicates
+			bool k1isNull, k2isNull, k3isNull;
+			Datum  d1 = heap_getattr(slot->tts_tuple, 1,
+									 slot->tts_tupleDescriptor, &k1isNull);
+			Datum  d2 = heap_getattr(slot->tts_tuple, 2,
+									 slot->tts_tupleDescriptor, &k2isNull);
+			Datum  d3 = heap_getattr(slot->tts_tuple, 3,
+									 slot->tts_tupleDescriptor, &k3isNull);
+			uint32 t1 = DatumGetUInt32(d1);
+			uint32 t2 = DatumGetUInt32(d2);
+			uint32 t3 = DatumGetUInt32(d3);
+			if (MigrateTuple(slot, t1, t2, t3))
 			{
 				++tuplemigratecount;
 				return slot;
@@ -266,7 +273,18 @@ ExecScan(ScanState *node,
 		{
 			if (migrateflag)
 			{
-				if (MigrateTuple(slot))
+				// Get query's predicates
+				bool k1isNull, k2isNull, k3isNull;
+				Datum  d1 = heap_getattr(slot->tts_tuple, 1,
+										slot->tts_tupleDescriptor, &k1isNull);
+				Datum  d2 = heap_getattr(slot->tts_tuple, 2,
+										slot->tts_tupleDescriptor, &k2isNull);
+				Datum  d3 = heap_getattr(slot->tts_tuple, 3,
+										slot->tts_tupleDescriptor, &k3isNull);
+				uint32 t1 = DatumGetUInt32(d1);
+				uint32 t2 = DatumGetUInt32(d2);
+				uint32 t3 = DatumGetUInt32(d3);
+				if (MigrateTuple(slot, t1, t2, t3))
 				{
 					++tuplemigratecount;
 
