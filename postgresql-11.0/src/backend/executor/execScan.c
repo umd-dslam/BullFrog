@@ -43,6 +43,14 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 	// printf("k1: %d, k2: %d, k3: %d\n", k1, k2, k3);
 	// printf("eid: %d, wordid: %d, lockbitid: %d, migratebitid: %d\n", eid, wordid, lockbitid, migratebitid);
 
+	if (list_member_int(InProgLocalList0, eid)) {
+		return true;
+	}
+
+	if (list_member_int(InProgLocalList1, eid)) {
+		return false;
+	}
+
 	if (!getkthbit(PartialBitmap[wordid], migratebitid))
 	{
 		if (getkthbit(PartialBitmap[wordid], lockbitid))
