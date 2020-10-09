@@ -606,6 +606,41 @@ list_delete_cell(List *list, ListCell *cell, ListCell *prev)
 	return list;
 }
 
+List *
+pg_list_delete_cell(List *list, ListCell *cell, ListCell *prev)
+{
+	check_list_invariants(list);
+	Assert(prev != NULL ? lnext(prev) == cell : list_head(list) == cell);
+
+	/*
+	 * If we're about to delete the last node from the list, free the whole
+	 * list instead and return NIL, which is the only valid representation of
+	 * a zero-length list.
+	 */
+	if (list->length == 1)
+	{
+		pg_list_free(list, false);
+		return NIL;
+	}
+
+	/*
+	 * Otherwise, adjust the necessary list links, deallocate the particular
+	 * node we have just removed, and return the list we were given.
+	 */
+	list->length--;
+
+	if (prev)
+		prev->next = cell->next;
+	else
+		list->head = cell->next;
+
+	if (list->tail == cell)
+		list->tail = prev;
+
+	free(cell);
+	return list;
+}
+
 /*
  * Delete the first cell in list that matches datum, if any.
  * Equality is determined via equal().

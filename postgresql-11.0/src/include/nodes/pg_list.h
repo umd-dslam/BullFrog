@@ -238,6 +238,7 @@ extern List *list_delete_int(List *list, int datum);
 extern List *list_delete_oid(List *list, Oid datum);
 extern List *list_delete_first(List *list);
 extern List *list_delete_cell(List *list, ListCell *cell, ListCell *prev);
+extern List *pg_list_delete_cell(List *list, ListCell *cell, ListCell *prev);
 
 extern List *list_union(const List *list1, const List *list2);
 extern List *list_union_ptr(const List *list1, const List *list2);
