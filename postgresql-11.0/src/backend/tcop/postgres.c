@@ -1579,6 +1579,12 @@ exec_bind_message(StringInfo input_message)
 		InProgLocalList1 = NIL;
 		BitmapNum = 1;
 		PartialBitmap = GlobalBitmap + BITMAPSIZE;
+	} else if (strncmp(psrc->query_string, " insert into district1", 22) == 0) {
+		migrateflag = true;
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+		BitmapNum = 2;
+		PartialBitmap = GlobalBitmap + 2 * BITMAPSIZE;
 	}
 
 	/*
