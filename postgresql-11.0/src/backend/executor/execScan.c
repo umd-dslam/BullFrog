@@ -43,8 +43,6 @@ bool MigrateTuple(TupleTableSlot *slot)
 	uint32 eid = idx - 1;
 	if (BitmapNum == 2) {
 		eid = eid % 64000;
-	} else {
-		eid = eid % 1500000;
 	}
 
 	uint32 wordid 		= getwordid(eid);

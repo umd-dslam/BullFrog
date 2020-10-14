@@ -28,7 +28,7 @@ uint32  count_inprogress    = 0;
 uint64  *GlobalBitmap       = NULL;
 
 /* bitmapNum for indicating bitmap tables */
-uint8 BitmapNum = 0;
+uint32 BitmapNum = 0;
 uint64 *PartialBitmap = NULL;
 
 List    *InProgLocalList0;
