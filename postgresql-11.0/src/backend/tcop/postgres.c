@@ -1584,7 +1584,7 @@ exec_bind_message(StringInfo input_message)
 		InProgLocalList0 = NIL;
 		InProgLocalList1 = NIL;
 		BitmapNum = 2;
-		PartialBitmap = GlobalBitmap + 2 * BITMAPSIZE);
+		PartialBitmap = GlobalBitmap + 2 * BITMAPSIZE;
 		// printf("##%s\n", psrc->query_string);
 	}
 
