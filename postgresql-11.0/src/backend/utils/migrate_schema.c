@@ -117,11 +117,11 @@ InitGlobalBitmap(void)
 {
 	bool found;
 	/* allocate bitmap from shared memory */
-	GlobalBitmap = (uint64 *) ShmemInitStruct("Global Bitmap", (3 * BITMAPSIZE * sizeof(uint64)), &found);
+	GlobalBitmap = (uint64 *) ShmemInitStruct("Global Bitmap", ((2 * BITMAPSIZE + 1000) * sizeof(uint64)), &found);
 
 	if (!found)
 	{
 		printf("Shared Global Bitmap created!\n");
-		memset(GlobalBitmap, 0, (3 * BITMAPSIZE * sizeof(uint64)));
+		memset(GlobalBitmap, 0, ((2 * BITMAPSIZE + 1000) * sizeof(uint64)));
 	}
 }

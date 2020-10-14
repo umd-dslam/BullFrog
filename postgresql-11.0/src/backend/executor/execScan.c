@@ -36,15 +36,25 @@ bool MigrateTuple(TupleTableSlot *slot)
 	uint32 offset 	= (uint32) ItemPointerGetOffsetNumber(&lctid);
 
 	uint32 pagesize = NUMTUPLESPERPAGE;
+	if (BitmapNum == 2) {
+		pagesize = 67;
+	}
 	uint32 idx = blockId * pagesize + offset;
 	uint32 eid = idx - 1;
+	if (BitmapNum == 2) {
+		eid = eid % 64000;
+	} else {
+		eid = eid % 1500000;
+	}
 
 	uint32 wordid 		= getwordid(eid);
 	uint32 lockbitid 	= getlockbitid(eid);
 	uint32 migratebitid = getmigratebitid(eid);
 
-	// printf("blockId: %d, pageSize: %d, offset: %d\n", blockId, pagesize, offset);
-	// printf("eid: %d, wordid: %d, lockbitid: %d, migratebitid: %d\n", eid, wordid, lockbitid, migratebitid);
+	// if (BitmapNum == 2) {
+	// 	printf("blockId: %d, pageSize: %d, offset: %d\n", blockId, pagesize, offset);
+	// 	printf("eid: %d, wordid: %d, lockbitid: %d, migratebitid: %d\n", eid, wordid, lockbitid, migratebitid);
+	// }
 
 	if (!getkthbit(PartialBitmap[wordid], migratebitid))
 	{
