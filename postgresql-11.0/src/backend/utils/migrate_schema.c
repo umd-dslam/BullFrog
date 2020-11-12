@@ -34,6 +34,8 @@ uint64 *PartialBitmap = NULL;
 List    *InProgLocalList0;
 List    *InProgLocalList1;
 
+HTAB* TrackingHashTables[10] = {NULL};
+
 inline uint32 getwordid(uint32 eid)
 {
 	return (eid / ELEMCOUNTINWORD);
@@ -123,5 +125,31 @@ InitGlobalBitmap(void)
 	{
 		printf("Shared Global Bitmap created!\n");
 		memset(GlobalBitmap, 0, (2 * BITMAPSIZE * sizeof(uint64)));
+	}
+}
+
+// Initializing shmem hash table for storing in-progress identifiers
+// corresponding to base tables in a migration.
+void
+InitTrackingHashTables()
+{
+    HASHCTL ctl;
+    int size;
+
+    memset(&ctl, 0, sizeof(ctl));
+
+    ctl.keysize        = sizeof(hash_key_t);
+    ctl.entrysize      = sizeof(hash_value_t);
+    ctl.num_partitions = 1;
+
+    // FIXME: TPC-C: # tuples in a migration <= 100
+    size = 100;
+
+	int worker_num = 10;
+	for (int i = 0; i < worker_num; ++i)
+	{
+		char shmem_name[20];
+    	sprintf(shmem_name, "%d", i);
+		TrackingHashTables[i] = ShmemInitHash(shmem_name, size, size, &ctl, HASH_ELEM | HASH_BLOBS | HASH_PARTITION);
 	}
 }
