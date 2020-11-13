@@ -73,6 +73,7 @@ typedef struct
 
 typedef struct
 {
+    hash_key_t key;
     uint8_t val;
 } hash_value_t;
 

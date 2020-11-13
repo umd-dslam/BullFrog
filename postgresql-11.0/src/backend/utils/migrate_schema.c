@@ -141,17 +141,17 @@ InitTrackingHashTables()
 
     ctl.keysize        = sizeof(hash_key_t);
     ctl.entrysize      = sizeof(hash_value_t);
-    ctl.num_partitions = 1;
+    // ctl.num_partitions = 1;
 
     // FIXME: TPC-C: # tuples in a migration <= 100
-    size = 100;
+    size = 128;
 
 	int worker_num = 10;
 	for (int i = 0; i < worker_num; ++i)
 	{
 		char shmem_name[20];
     	sprintf(shmem_name, "%d", i);
-		TrackingHashTables[i] = ShmemInitHash(shmem_name, size, size, &ctl, HASH_ELEM | HASH_BLOBS | HASH_PARTITION);
+		TrackingHashTables[i] = ShmemInitHash(shmem_name, size, size, &ctl, HASH_ELEM);
 	}
 }
 
@@ -168,8 +168,10 @@ trackinghashtable_insert(uint32 hkey, uint8 *hval)
 	hvalue = (hash_value_t *) hash_search_with_hash_value(TrackingTable,
 				(void *) &key, hashcode, HASH_ENTER, &found);
 
-	if (!found)
+	if (!found) {
 		hvalue->val = *hval;
+		// hvalue->key = key;
+	}
 
 	return !found;
 }
