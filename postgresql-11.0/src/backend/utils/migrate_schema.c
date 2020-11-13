@@ -35,6 +35,7 @@ List    *InProgLocalList0;
 List    *InProgLocalList1;
 
 HTAB* TrackingHashTables[10] = {NULL};
+HTAB* TrackingTable = NULL;
 
 inline uint32 getwordid(uint32 eid)
 {
@@ -152,4 +153,46 @@ InitTrackingHashTables()
     	sprintf(shmem_name, "%d", i);
 		TrackingHashTables[i] = ShmemInitHash(shmem_name, size, size, &ctl, HASH_ELEM | HASH_BLOBS | HASH_PARTITION);
 	}
+}
+
+bool
+trackinghashtable_insert(uint32 hkey, uint8 *hval)
+{
+	hash_key_t key;
+	hash_value_t *hvalue;
+	bool found;
+	uint32 hashcode;
+
+	key.tid = hkey;
+	hashcode = get_hash_value(TrackingTable, (void *) &key);
+	hvalue = (hash_value_t *) hash_search_with_hash_value(TrackingTable,
+				(void *) &key, hashcode, HASH_ENTER, &found);
+
+	if (!found)
+		hvalue->val = *hval;
+
+	return !found;
+}
+
+bool
+trackinghashtable_lookup(uint32 hkey)
+{
+	hash_key_t key;
+	bool found;
+
+	key.tid = hkey;
+
+	hash_search(TrackingTable, (void *) &key, HASH_FIND, &found);
+
+	return found;
+}
+
+void
+trackinghashtable_delete(uint32 hkey)
+{
+	hash_key_t key;
+
+	key.tid = hkey;
+
+	hash_search(TrackingTable, (void *) &key, HASH_REMOVE, NULL);
 }

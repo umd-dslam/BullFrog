@@ -13,37 +13,8 @@ PG_MODULE_MAGIC;
 
 const char* PQ_CONN_DEFUALTS = "user=postgres password=postgres dbname=tpcc port=5433"; 
 
-HTAB *init_tracking_hash_table(int32 worker_id);
 void do_exit(PGconn *conn, PGresult *res);
 void exec_txns(int32 worker_id, char *buffer);
-
-// Initializing shmem hash table for storing in-progress identifiers
-// corresponding to base tables in a migration.
-HTAB *init_tracking_hash_table(int32 worker_id)
-{
-    HASHCTL ctl;
-    int size;
-
-    memset(&ctl, 0, sizeof(ctl));
-
-    ctl.keysize        = sizeof(hash_key_t);
-    ctl.entrysize      = sizeof(hash_value_t);
-    ctl.num_partitions = 1;
-
-    // FIXME: TPC-C: # tuples in a migration <= 100
-    size = 100;
-
-    char shmem_name[20];
-    sprintf(shmem_name, "%d", worker_id);
-
-    LWLockAcquire(AddinShmemInitLock, LW_EXCLUSIVE);
-
-    HTAB *hash_table = ShmemInitHash(shmem_name, size, size, &ctl, HASH_ELEM | HASH_BLOBS | HASH_PARTITION);
-
-    LWLockRelease(AddinShmemInitLock);
-
-    return hash_table;
-}
 
 void do_exit(PGconn *conn, PGresult *res)
 {
@@ -127,8 +98,8 @@ Datum customer_proj1_q1(PG_FUNCTION_ARGS)
         "from customer "
         "where c_w_id = %d "
         "  and c_d_id = %d "
-        "  and c_id = %d);";
-    sprintf(buffer, q1, c_w_id, c_d_id, c_id);
+        "  and c_id = %d);%d";
+    sprintf(buffer, q1, c_w_id, c_d_id, c_id, worker_id);
 
     exec_txns(worker_id, buffer);
 
@@ -158,8 +129,8 @@ Datum customer_proj1_q2(PG_FUNCTION_ARGS)
         "from customer "
         "where c_w_id = %d "
         "  and c_d_id = %d "
-        "  and c_last = '%s');";
-    sprintf(buffer, q2, c_w_id, c_d_id, c_last);
+        "  and c_last = '%s');%d";
+    sprintf(buffer, q2, c_w_id, c_d_id, c_last, worker_id);
 
     exec_txns(worker_id, buffer);
 
@@ -189,8 +160,8 @@ Datum customer_proj2_q1(PG_FUNCTION_ARGS)
         "from customer "
         "where c_w_id = %d "
         "  and c_d_id = %d "
-        "  and c_id = %d);";
-    sprintf(buffer, q1, c_w_id, c_d_id, c_id);
+        "  and c_id = %d);%d";
+    sprintf(buffer, q1, c_w_id, c_d_id, c_id, worker_id);
 
     exec_txns(worker_id, buffer);
 
@@ -220,8 +191,8 @@ Datum customer_proj2_q2(PG_FUNCTION_ARGS)
         "from customer "
         "where c_w_id = %d "
         "  and c_d_id = %d "
-        "  and c_last = '%s');";
-    sprintf(buffer, q2, c_w_id, c_d_id, c_last);
+        "  and c_last = '%s');%d";
+    sprintf(buffer, q2, c_w_id, c_d_id, c_last, worker_id);
 
     exec_txns(worker_id, buffer);
 

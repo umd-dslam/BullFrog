@@ -68,12 +68,11 @@ tpcc=# select pid, num_tuples from (select (ctid::text::point)[0]::bigint as pid
 
 typedef struct
 {
-    TransactionId xid;
+    uint32 tid;
 } hash_key_t;
 
 typedef struct
 {
-    hash_key_t key;
     uint8_t val;
 } hash_value_t;
 
@@ -101,12 +100,17 @@ extern uint64 *PartialBitmap;
 extern uint8 BitmapNum;
 
 extern HTAB* TrackingHashTables[];
+extern HTAB* TrackingTable;
 
 extern List *InProgLocalList0;
 extern List *InProgLocalList1;
 
 extern void InitGlobalBitmap(void);
 extern void InitTrackingHashTables(void);
+
+extern bool trackinghashtable_insert(uint32 hkey, uint8 *hval);
+extern bool trackinghashtable_lookup(uint32 hkey);
+extern void trackinghashtable_delete(uint32 hkey);
 
 #define MigrateBitmapPartition(hashcode) \
     ((hashcode) % NUM_MIGRATE_BITMAP_LOCKS)

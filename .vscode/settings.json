@@ -2,6 +2,7 @@
     "files.associations": {
         "bgworker_internals.h": "c",
         "pgtypes_numeric.h": "c",
-        "sstream": "c"
+        "sstream": "c",
+        "string": "c"
     }
 }

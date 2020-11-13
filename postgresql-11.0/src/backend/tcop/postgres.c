@@ -888,23 +888,18 @@ static void post_query_tasks(void)
 	if (migrateflag)
 	{
 		ListCell *cell = NULL;
-		ListCell *prev = NULL;
 		foreach(cell, InProgLocalList0)
 		{
 			setmigratebit(PartialBitmap, lfirst_int(cell));
 		}
 
 		int volatile size = list_length(InProgLocalList1);
-		while (size > 0)
+
+		foreach(cell, InProgLocalList1)
 		{
-			foreach(cell, InProgLocalList1)
+			if (getmigratebit(PartialBitmap, lfirst_int(cell)))
 			{
-				if (getmigratebit(PartialBitmap, lfirst_int(cell)))
-				{
-					size--;
-					pg_list_delete_cell(InProgLocalList1, cell, prev);
-				}
-				prev = cell;
+				trackinghashtable_delete(lfirst_int(cell));
 			}
 		}
 
@@ -1272,6 +1267,14 @@ exec_parse_message(const char *query_string,	/* string to execute */
 	bool		is_named;
 	bool		save_log_statement_stats = log_statement_stats;
 	char		msec_str[32];
+
+	if (strncmp(query_string, " insert into customer_proj1", 27) == 0
+	 || strncmp(query_string, " insert into customer_proj2", 27) == 0) {
+		char* semi = strrchr(query_string, ';');
+		int worker_id = (int)semi[1];
+		TrackingTable = TrackingHashTables[worker_id];
+		*semi = '\0';
+	}
 
 	/*
 	 * Report query to various monitoring facilities.
