@@ -931,6 +931,30 @@ exec_simple_query(const char *query_string)
 	bool		use_implicit_block;
 	char		msec_str[32];
 
+	if (strncmp(query_string, " insert into customer_proj1", 27) == 0) {
+		migrateflag = true;
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+		BitmapNum = 0;
+		PartialBitmap = GlobalBitmap;
+
+		char* semi = strrchr(query_string, ';');
+		int worker_id = semi[1] - '0';
+		TrackingTable = TrackingHashTables[worker_id];
+		*semi = '\0';
+	} else if (strncmp(query_string, " insert into customer_proj2", 27) == 0) {
+		migrateflag = true;
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+		BitmapNum = 1;
+		PartialBitmap = GlobalBitmap + BITMAPSIZE;
+
+		char* semi = strrchr(query_string, ';');
+		int worker_id = semi[1] - '0';
+		TrackingTable = TrackingHashTables[worker_id];
+		*semi = '\0';
+	}
+
 	/*
 	 * Report query to various monitoring facilities.
 	 */

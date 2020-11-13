@@ -3,6 +3,10 @@
         "bgworker_internals.h": "c",
         "pgtypes_numeric.h": "c",
         "sstream": "c",
-        "string": "c"
+        "string": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c"
     }
 }

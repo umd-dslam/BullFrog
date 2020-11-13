@@ -48,6 +48,7 @@ bool MigrateTuple(TupleTableSlot *slot)
 
 	// if size == 0, it's the 1st micro-transaction at udf
 	long size = hash_get_num_entries(TrackingTable);
+	// printf("#### hash size: %d\n", size);
 
 	if (!getkthbit(PartialBitmap[wordid], migratebitid))
 	{

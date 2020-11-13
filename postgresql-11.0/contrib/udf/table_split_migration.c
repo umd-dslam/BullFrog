@@ -70,9 +70,10 @@ void exec_txns(int32 worker_id, char *buffer)
             PQfinish(conn);
             exit(1);
         }
+        PQclear(res);
     } while (hash_get_num_entries(hash_table));
 
-    PQclear(res);
+
     PQfinish(conn);
 }
 
@@ -200,25 +201,46 @@ Datum customer_proj2_q2(PG_FUNCTION_ARGS)
 }
 // -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+PG_FUNCTION_INFO_V1(add_one);
+
+Datum
+add_one(PG_FUNCTION_ARGS)
+{
+    int32   arg = PG_GETARG_INT32(0);
+
+    PG_RETURN_INT32(arg + 1);
+}
+
+// DROP FUNCTION IF EXISTS add_one; 
+// CREATE FUNCTION add_one(integer) RETURNS integer
+//      AS 'table_split_migration', 'add_one'
+//      LANGUAGE C STRICT;
+// -----------------------------------------------------------------------------
+
 
 // -----------------------------------------------------------------------------
 //                          Load into PostgreSQL
 // -----------------------------------------------------------------------------
+// DROP FUNCTION IF EXISTS customer_proj1_q1; 
 // CREATE FUNCTION customer_proj1_q1(integer, integer, integer, integer) RETURNS
 // integer
 //      AS 'table_split_migration', 'customer_proj1_q1'
 //      LANGUAGE C STRICT;
 
+// DROP FUNCTION IF EXISTS customer_proj1_q2; 
 // CREATE FUNCTION customer_proj1_q2(integer, integer, varchar, integer) RETURNS
 // integer
 //      AS 'table_split_migration', 'customer_proj1_q2'
 //      LANGUAGE C STRICT;
 
+// DROP FUNCTION IF EXISTS customer_proj2_q1; 
 // CREATE FUNCTION customer_proj2_q1(integer, integer, integer, integer) RETURNS
 // integer
 //      AS 'table_split_migration', 'customer_proj2_q1'
 //      LANGUAGE C STRICT;
 
+// DROP FUNCTION IF EXISTS customer_proj2_q1; 
 // CREATE FUNCTION customer_proj2_q2(integer, integer, varchar, integer) RETURNS
 // integer
 //      AS 'table_split_migration', 'customer_proj2_q2'
