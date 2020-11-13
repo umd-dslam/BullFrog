@@ -891,6 +891,8 @@ static void post_query_tasks(void)
 		foreach(cell, InProgLocalList0)
 		{
 			setmigratebit(PartialBitmap, lfirst_int(cell));
+			// handle txns restart-after-abort
+			trackinghashtable_delete(lfirst_int(cell));
 		}
 
 		int volatile size = list_length(InProgLocalList1);
