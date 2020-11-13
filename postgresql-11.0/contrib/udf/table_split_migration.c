@@ -11,7 +11,7 @@
 
 PG_MODULE_MAGIC;
 
-const char* PQ_CONN_DEFUALTS = "user=postgres password=postgres dbname=tpcc port=5433"; 
+const char* PQ_CONN_DEFUALTS = "user=postgres password=postgres dbname=tpcc port=5432"; 
 
 void do_exit(PGconn *conn, PGresult *res);
 void exec_txns(int32 worker_id, char *buffer);
