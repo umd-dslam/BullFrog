@@ -895,8 +895,6 @@ static void post_query_tasks(void)
 			trackinghashtable_delete(lfirst_int(cell));
 		}
 
-		int volatile size = list_length(InProgLocalList1);
-
 		foreach(cell, InProgLocalList1)
 		{
 			if (getmigratebit(PartialBitmap, lfirst_int(cell)))
