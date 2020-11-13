@@ -280,6 +280,7 @@ CreateSharedMemoryAndSemaphores(bool makePrivate, int port)
 	BackendRandomShmemInit();
 
 	InitGlobalBitmap();
+	InitTrackingHashTables();
 
 #ifdef EXEC_BACKEND
 
