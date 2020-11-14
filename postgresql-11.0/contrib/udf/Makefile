@@ -9,10 +9,10 @@ INCLUDEDIR = $(shell $(PG_CONFIG) --includedir-server)
 include $(PGXS)
 
 table_split_migration.so: table_split_migration.o
-	cc -dynamic -bundle -flat_namespace -undefined suppress $(PG_CPPFLAGS) -o table_split_migration.so table_split_migration.o
+	gcc -dynamic -bundle -flat_namespace -undefined suppress $(PG_CPPFLAGS) -o table_split_migration.so table_split_migration.o
 
 table_split_migration.o: table_split_migration.c
-	cc -o table_split_migration.o -c table_split_migration.c $(CFLAGS) $(PG_CPPFLAGS) -I$(INCLUDEDIR)
+	gcc -o table_split_migration.o -c table_split_migration.c $(CFLAGS) $(PG_CPPFLAGS) -I$(INCLUDEDIR)
 
 # https://www.christian-rossow.de/articles/PostgreSQL_C_language_functions_with_bytea.php
 
