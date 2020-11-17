@@ -47,7 +47,9 @@ bool MigrateTuple(TupleTableSlot *slot)
 	// printf("eid: %d, wordid: %d, lockbitid: %d, migratebitid: %d\n", eid, wordid, lockbitid, migratebitid);
 
 	// if size == 0, it's the 1st micro-transaction at udf
-	long size = hash_get_num_entries(TrackingTable);
+	long size = 0;
+	if (migrateudf)
+		size = hash_get_num_entries(TrackingTable);
 	// printf("#### hash size: %d\n", size);
 
 	if (!getkthbit(PartialBitmap[wordid], migratebitid))
@@ -55,7 +57,8 @@ bool MigrateTuple(TupleTableSlot *slot)
 		if (getkthbit(PartialBitmap[wordid], lockbitid))
 		{
 			InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);
-			trackinghashtable_insert(TrackingTable, eid, 1);
+			if (migrateudf)
+				trackinghashtable_insert(TrackingTable, eid, 1);
 			return false;
 		}
 
@@ -77,7 +80,8 @@ bool MigrateTuple(TupleTableSlot *slot)
 				LWLockRelease(bitmapLock);
 
 				InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);	
-				trackinghashtable_insert(TrackingTable, eid, 1);
+				if (migrateudf)
+					trackinghashtable_insert(TrackingTable, eid, 1);
 				return false;
 			}
 		}

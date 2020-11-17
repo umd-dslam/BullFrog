@@ -17,6 +17,7 @@
 
 /* flag to indicate if a query is a part of a migration */
 bool    migrateflag         = false;
+bool 	migrateudf 			= false;
 
 /* count of the number of tuples migrated (per transaction) */
 uint64  tuplemigratecount   = 0;

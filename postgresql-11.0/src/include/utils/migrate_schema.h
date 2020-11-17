@@ -92,6 +92,7 @@ extern inline void setinprogbit     (uint64 *bitmap, uint32 eid);
 extern inline void resetinprogbit   (uint64 *bitmap, uint32 eid);
 
 extern bool migrateflag;
+extern bool migrateudf;
 
 extern uint64 tuplemigratecount;
 extern uint32 count_inprogress;
