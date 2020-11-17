@@ -34,7 +34,7 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 	LWLock *bitmapLock;
 	// FIXME: k1: c_w_id = 50, k2: c_d_id = 10, k3: c_id = 3000
 	// page size = 300
-	const uint32 page = 512;
+	const uint32 page = 1;
 	uint32 eid = (k1 * 10 + k2) * (3000 / page) + (k3 - 1) / page;
 	uint32 wordid 		= getwordid(eid);
 	uint32 lockbitid 	= getlockbitid(eid);
@@ -44,11 +44,19 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 	// printf("k1: %d, k2: %d, k3: %d\n", k1, k2, k3);
 	// printf("eid: %d, wordid: %d, lockbitid: %d, migratebitid: %d\n", eid, wordid, lockbitid, migratebitid);
 
+	// if size == 0, it's the 1st micro-transaction at udf
+	long size = 0;
+	if (migrateudf)
+		size = hash_get_num_entries(TrackingTable);
+	// printf("#### hash size: %d\n", size);
+
 	if (list_member_int(InProgLocalList0, eid)) {
 		return true;
 	}
 
 	if (list_member_int(InProgLocalList1, eid)) {
+		if (migrateudf)
+			trackinghashtable_insert(TrackingTable, eid, 1);
 		return false;
 	}
 
@@ -57,6 +65,8 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 		if (getkthbit(PartialBitmap[wordid], lockbitid))
 		{
 			InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);
+			if (migrateudf)
+				trackinghashtable_insert(TrackingTable, eid, 1);
 			return false;
 		}
 
@@ -78,12 +88,21 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 				LWLockRelease(bitmapLock);
 
 				InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);	
+				if (migrateudf)
+					trackinghashtable_insert(TrackingTable, eid, 1);
 				return false;
 			}
 		}
 		else
 		{
 			LWLockRelease(bitmapLock);
+			if (size != 0) {
+				trackinghashtable_delete(TrackingTable, eid);
+			}
+		}
+	} else {
+		if (size != 0) {
+			trackinghashtable_delete(TrackingTable, eid);
 		}
 	}
 	return false;

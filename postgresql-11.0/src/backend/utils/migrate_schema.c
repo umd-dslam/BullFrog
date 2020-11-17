@@ -17,6 +17,7 @@
 
 /* flag to indicate if a query is a part of a migration */
 bool    migrateflag         = false;
+bool 	migrateudf 			= false;
 
 /* count of the number of tuples migrated (per transaction) */
 uint64  tuplemigratecount   = 0;
@@ -33,6 +34,9 @@ uint64 *PartialBitmap = NULL;
 
 List    *InProgLocalList0;
 List    *InProgLocalList1;
+
+HTAB* TrackingHashTables[10] = {NULL};
+HTAB* TrackingTable = NULL;
 
 inline uint32 getwordid(uint32 eid)
 {
@@ -124,4 +128,73 @@ InitGlobalBitmap(void)
 		printf("Shared Global Bitmap created!\n");
 		memset(GlobalBitmap, 0, (2 * BITMAPSIZE * sizeof(uint64)));
 	}
+}
+
+// Initializing shmem hash table for storing in-progress identifiers
+// corresponding to base tables in a migration.
+void
+InitTrackingHashTables()
+{
+    HASHCTL ctl;
+    int size;
+
+    memset(&ctl, 0, sizeof(ctl));
+
+    ctl.keysize        = sizeof(hash_key_t);
+    ctl.entrysize      = sizeof(hash_value_t);
+    // ctl.num_partitions = 1;
+
+    // FIXME: TPC-C: # tuples in a migration <= 100
+    size = 1000;
+
+	int worker_num = 10;
+	for (int i = 0; i < worker_num; ++i)
+	{
+		char shmem_name[20];
+    	sprintf(shmem_name, "%d", i);
+		TrackingHashTables[i] = ShmemInitHash(shmem_name, size, size, &ctl, HASH_ELEM);
+	}
+}
+
+bool
+trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 *hval)
+{
+	hash_key_t key;
+	hash_value_t *hvalue;
+	bool found;
+	// uint32 hashcode;
+
+	key.tid = hkey;
+	// hashcode = get_hash_value(TrackingTable, (void *) &key);
+	hvalue = (hash_value_t *) hash_search(TrackingTable, (void *) &key, HASH_ENTER, &found);
+
+	if (!found) {
+		hvalue->val = *hval;
+		// hvalue->key = key;
+	}
+
+	return !found;
+}
+
+bool
+trackinghashtable_lookup(HTAB* TrackingTable, uint32 hkey)
+{
+	hash_key_t key;
+	bool found;
+
+	key.tid = hkey;
+
+	hash_search(TrackingTable, (void *) &key, HASH_FIND, &found);
+
+	return found;
+}
+
+void
+trackinghashtable_delete(HTAB* TrackingTable, uint32 hkey)
+{
+	hash_key_t key;
+
+	key.tid = hkey;
+
+	hash_search(TrackingTable, (void *) &key, HASH_REMOVE, NULL);
 }

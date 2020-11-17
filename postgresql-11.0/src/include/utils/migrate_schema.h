@@ -18,7 +18,7 @@
 #include "fmgr.h"
 #include "storage/lwlock.h"
 #include "nodes/pg_list.h"
-
+#include "utils/hsearch.h"
 
 #define LOCKBITPOS      0
 #define MIGRATEBITPOS   1
@@ -61,6 +61,17 @@ tpcc=# select pid, num_tuples from (select (ctid::text::point)[0]::bigint as pid
 #define NUMPAGES            1000000
 #define BITMAPSIZE          (((NUMPAGES * 2) + (SIZEOFWORD - 1)) / (SIZEOFWORD))
 
+typedef struct
+{
+    uint32 tid;
+} hash_key_t;
+
+typedef struct
+{
+    hash_key_t key;
+    uint8_t val;
+} hash_value_t;
+
 extern inline uint32 getwordid      (uint32 eid);
 extern inline uint32 getlockbitid   (uint32 eid);
 extern inline uint32 getmigratebitid(uint32 eid);
@@ -76,6 +87,7 @@ extern inline void setinprogbit     (uint64 *bitmap, uint32 eid);
 extern inline void resetinprogbit   (uint64 *bitmap, uint32 eid);
 
 extern bool migrateflag;
+extern bool migrateudf;
 
 extern uint64 tuplemigratecount;
 extern uint32 count_inprogress;
@@ -84,10 +96,18 @@ extern uint64 *GlobalBitmap;
 extern uint64 *PartialBitmap;
 extern uint8 BitmapNum;
 
+extern HTAB* TrackingHashTables[];
+extern HTAB* TrackingTable;
+
 extern List *InProgLocalList0;
 extern List *InProgLocalList1;
 
 extern void InitGlobalBitmap(void);
+extern void InitTrackingHashTables(void);
+
+extern bool trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 *hval);
+extern bool trackinghashtable_lookup(HTAB* TrackingTable, uint32 hkey);
+extern void trackinghashtable_delete(HTAB* TrackingTable, uint32 hkey);
 
 #define MigrateBitmapPartition(hashcode) \
     ((hashcode) % NUM_MIGRATE_BITMAP_LOCKS)
