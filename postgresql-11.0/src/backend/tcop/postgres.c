@@ -892,14 +892,14 @@ static void post_query_tasks(void)
 		{
 			setmigratebit(PartialBitmap, lfirst_int(cell));
 			// handle txns restart-after-abort
-			trackinghashtable_delete(lfirst_int(cell));
+			trackinghashtable_delete(TrackingTable, lfirst_int(cell));
 		}
 
 		foreach(cell, InProgLocalList1)
 		{
 			if (getmigratebit(PartialBitmap, lfirst_int(cell)))
 			{
-				trackinghashtable_delete(lfirst_int(cell));
+				trackinghashtable_delete(TrackingTable, lfirst_int(cell));
 			}
 		}
 
