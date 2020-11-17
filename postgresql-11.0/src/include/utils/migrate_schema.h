@@ -59,7 +59,7 @@ tpcc=# select pid, num_tuples from (select (ctid::text::point)[0]::bigint as pid
 /*
  * lineitem
  */
-#define NUMPAGES            113505
+#define NUMPAGES            113496
 #define NUMTUPLESPERPAGE    15
 #define NUMTUPLESLASTPAGE   4
 #define NUMTUPLES           2000000
@@ -109,9 +109,9 @@ extern List *InProgLocalList1;
 extern void InitGlobalBitmap(void);
 extern void InitTrackingHashTables(void);
 
-extern bool trackinghashtable_insert(uint32 hkey, uint8 *hval);
-extern bool trackinghashtable_lookup(uint32 hkey);
-extern void trackinghashtable_delete(uint32 hkey);
+extern bool trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 *hval);
+extern bool trackinghashtable_lookup(HTAB* TrackingTable, uint32 hkey);
+extern void trackinghashtable_delete(HTAB* TrackingTable, uint32 hkey);
 
 #define MigrateBitmapPartition(hashcode) \
     ((hashcode) % NUM_MIGRATE_BITMAP_LOCKS)

@@ -11,7 +11,7 @@
 
 PG_MODULE_MAGIC;
 
-const char* PQ_CONN_DEFUALTS = "user=postgres password=postgres dbname=tpcc port=5432"; 
+const char* PQ_CONN_DEFUALTS = "user=postgres password=postgres dbname=tpcc port=5432 keepalives=1"; 
 
 void do_exit(PGconn *conn, PGresult *res);
 void exec_txns(int32 worker_id, int32 count, ...);
@@ -261,7 +261,9 @@ Datum customer_proj_background(PG_FUNCTION_ARGS)
 {
     int32 c_w_id    = PG_GETARG_INT32(0);
     int32 c_d_id    = PG_GETARG_INT32(1);
-    int32 worker_id = PG_GETARG_INT32(2);
+    int32 c_i_id_l  = PG_GETARG_INT32(2);
+    int32 c_i_id_u  = PG_GETARG_INT32(3);
+    int32 worker_id = PG_GETARG_INT32(4);
 
     char buffer1[500];
     char *q1 =
@@ -273,8 +275,10 @@ Datum customer_proj_background(PG_FUNCTION_ARGS)
         "  c_balance, c_ytd_payment, c_payment_cnt, c_delivery_cnt, c_data "
         "from customer "
         "where c_w_id = %d "
-        "  and c_d_id = %d);%d";
-    sprintf(buffer1, q1, c_w_id, c_d_id, worker_id);
+        "  and c_d_id = %d "
+        "  and c_id >= %d "
+        "  and c_id < %d);%d";
+    sprintf(buffer1, q1, c_w_id, c_d_id, c_i_id_l, c_i_id_u, worker_id);
 
     char buffer2[500];
     char *q2 =
@@ -286,8 +290,10 @@ Datum customer_proj_background(PG_FUNCTION_ARGS)
         "  c_street_1, c_city, c_state, c_zip "
         "from customer "
         "where c_w_id = %d "
-        "  and c_d_id = %d);%d";
-    sprintf(buffer2, q2, c_w_id, c_d_id, worker_id);
+        "  and c_d_id = %d "
+        "  and c_id >= %d "
+        "  and c_id < %d);%d";
+    sprintf(buffer2, q2, c_w_id, c_d_id, c_i_id_l, c_i_id_u, worker_id);
 
     exec_txns(worker_id, 2, buffer1, buffer2);
 
@@ -317,7 +323,7 @@ add_one(PG_FUNCTION_ARGS)
 //                          Load into PostgreSQL
 // -----------------------------------------------------------------------------
 // DROP FUNCTION IF EXISTS customer_proj_background; 
-// CREATE FUNCTION customer_proj_background(integer, integer, integer) RETURNS
+// CREATE FUNCTION customer_proj_background(integer, integer, integer, integer, integer) RETURNS
 // integer
 //      AS 'table_split_migration', 'customer_proj_background'
 //      LANGUAGE C STRICT;

@@ -144,7 +144,7 @@ InitTrackingHashTables()
     // ctl.num_partitions = 1;
 
     // FIXME: TPC-C: # tuples in a migration <= 100
-    size = 128;
+    size = 1000;
 
 	int worker_num = 10;
 	for (int i = 0; i < worker_num; ++i)
@@ -156,17 +156,16 @@ InitTrackingHashTables()
 }
 
 bool
-trackinghashtable_insert(uint32 hkey, uint8 *hval)
+trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 *hval)
 {
 	hash_key_t key;
 	hash_value_t *hvalue;
 	bool found;
-	uint32 hashcode;
+	// uint32 hashcode;
 
 	key.tid = hkey;
-	hashcode = get_hash_value(TrackingTable, (void *) &key);
-	hvalue = (hash_value_t *) hash_search_with_hash_value(TrackingTable,
-				(void *) &key, hashcode, HASH_ENTER, &found);
+	// hashcode = get_hash_value(TrackingTable, (void *) &key);
+	hvalue = (hash_value_t *) hash_search(TrackingTable, (void *) &key, HASH_ENTER, &found);
 
 	if (!found) {
 		hvalue->val = *hval;
@@ -177,7 +176,7 @@ trackinghashtable_insert(uint32 hkey, uint8 *hval)
 }
 
 bool
-trackinghashtable_lookup(uint32 hkey)
+trackinghashtable_lookup(HTAB* TrackingTable, uint32 hkey)
 {
 	hash_key_t key;
 	bool found;
@@ -190,7 +189,7 @@ trackinghashtable_lookup(uint32 hkey)
 }
 
 void
-trackinghashtable_delete(uint32 hkey)
+trackinghashtable_delete(HTAB* TrackingTable, uint32 hkey)
 {
 	hash_key_t key;
 
