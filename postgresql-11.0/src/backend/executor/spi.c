@@ -35,6 +35,7 @@
 #include "utils/syscache.h"
 #include "utils/typcache.h"
 
+#include "utils/migrate_schema.h"
 
 /*
  * These global variables are part of the API for various SPI functions
@@ -446,6 +447,34 @@ SPI_execute(const char *src, bool read_only, long tcount)
 
 	if (src == NULL || tcount < 0)
 		return SPI_ERROR_ARGUMENT;
+
+	if (strncmp(src, " insert into customer_proj1", 27) == 0) {
+		migrateflag = true;
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+		BitmapNum = 0;
+		PartialBitmap = GlobalBitmap;
+
+		char* semi = strrchr(src, ';');
+		int worker_id = semi[1] - '0';
+		TrackingTable = TrackingHashTables[worker_id];
+		*semi = '\0';
+
+		migrateudf = true;
+	} else if (strncmp(src, " insert into customer_proj2", 27) == 0) {
+		migrateflag = true;
+		InProgLocalList0 = NIL;
+		InProgLocalList1 = NIL;
+		BitmapNum = 1;
+		PartialBitmap = GlobalBitmap + BITMAPSIZE;
+
+		char* semi = strrchr(src, ';');
+		int worker_id = semi[1] - '0';
+		TrackingTable = TrackingHashTables[worker_id];
+		*semi = '\0';
+
+		migrateudf = true;
+	}
 
 	res = _SPI_begin_call(true);
 	if (res < 0)

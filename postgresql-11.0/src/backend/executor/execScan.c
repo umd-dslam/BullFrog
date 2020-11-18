@@ -65,8 +65,6 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 		if (getkthbit(PartialBitmap[wordid], lockbitid))
 		{
 			InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);
-			if (migrateudf)
-				trackinghashtable_insert(TrackingTable, eid, 1);
 			return false;
 		}
 
@@ -88,8 +86,6 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 				LWLockRelease(bitmapLock);
 
 				InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);	
-				if (migrateudf)
-					trackinghashtable_insert(TrackingTable, eid, 1);
 				return false;
 			}
 		}

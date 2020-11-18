@@ -4478,6 +4478,8 @@ static void txn_error_handling()
 		foreach(cell, InProgLocalList0)
 		{
 			resetlockbit(PartialBitmap, lfirst_int(cell));
+			if (migrateudf)
+				trackinghashtable_insert(TrackingTable, lfirst_int(cell), 1);
 		}
 		tuplemigratecount = 0;
 		migrateflag = false;
