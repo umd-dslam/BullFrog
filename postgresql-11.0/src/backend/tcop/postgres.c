@@ -898,11 +898,13 @@ static void post_query_tasks(void)
 
 		foreach(cell, InProgLocalList1)
 		{
-			if (getmigratebit(PartialBitmap, lfirst_int(cell)))
-			{
-				if (migrateudf)
-					trackinghashtable_delete(TrackingTable, lfirst_int(cell));
-			}
+			if (migrateudf)
+				trackinghashtable_insert(TrackingTable, lfirst_int(cell), 1);
+			// if (getmigratebit(PartialBitmap, lfirst_int(cell)))
+			// {
+			// 	if (migrateudf)
+			// 		trackinghashtable_delete(TrackingTable, lfirst_int(cell));
+			// }
 		}
 
 		pg_list_free(InProgLocalList0, false);
@@ -1298,13 +1300,13 @@ exec_parse_message(const char *query_string,	/* string to execute */
 	bool		save_log_statement_stats = log_statement_stats;
 	char		msec_str[32];
 
-	// if (strncmp(query_string, " insert into customer_proj1", 27) == 0
-	//  || strncmp(query_string, " insert into customer_proj2", 27) == 0) {
-	// 	char* semi = strrchr(query_string, ';');
-	// 	int worker_id = semi[1] - '0';
-	// 	TrackingTable = TrackingHashTables[worker_id];
-	// 	*semi = '\0';
-	// }
+	if (strncmp(query_string, " insert into customer_proj1", 27) == 0
+	 || strncmp(query_string, " insert into customer_proj2", 27) == 0) {
+		char* semi = strrchr(query_string, ';');
+		int worker_id = semi[1] - '0';
+		TrackingTable = TrackingHashTables[worker_id];
+		*semi = '\0';
+	}
 
 	/*
 	 * Report query to various monitoring facilities.

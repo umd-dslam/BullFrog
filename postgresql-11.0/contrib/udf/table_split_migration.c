@@ -5,6 +5,7 @@
 #include "utils/geo_decls.h"
 #include "utils/hsearch.h"
 #include "utils/migrate_schema.h"
+#include "executor/spi.h"
 
 #include <string.h>
 #include "libpq-fe.h"
@@ -30,58 +31,28 @@ void exec_txns(int32 worker_id, int32 count, ...)
 {
     HTAB *hash_table = TrackingHashTables[worker_id];
 
-    PGconn *conn = PQconnectdb(PQ_CONN_DEFUALTS);
-    if (PQstatus(conn) == CONNECTION_BAD)
-    {
-        fprintf(stderr, "Connection to database failed: %s\n", PQerrorMessage(conn));
-        PQfinish(conn);
-        exit(1);
-    }
-
     // loop migration transactions
     va_list arg_ptr;
     char* buffer;
-    PGresult *res;
+	if (SPI_connect() != SPI_OK_CONNECT)
+		elog(ERROR, "could not connect to SPI manager");
+
     do
     {
-        // BEGIN
-        res = PQexec(conn, "BEGIN");
-        if (PQresultStatus(res) != PGRES_COMMAND_OK)
-        {
-            printf("BEGIN command failed\n");
-            PQclear(res);
-            PQfinish(conn);
-            exit(1);
-        }
-        PQclear(res);
-
+        // Normally, when an SPI-using procedure is called,
+        // there is already a transaction active
         va_start(arg_ptr, count);
         for(int i = 0; i < count; ++i) {
             buffer = va_arg(arg_ptr, char*);
             // TRANSACTION
-            res = PQexec(conn, buffer);
-            if (PQresultStatus(res) != PGRES_COMMAND_OK)
-            {
-                do_exit(conn, res);
-            }
-            PQclear(res);
+            if (SPI_exec(buffer, 0) != SPI_OK_INSERT)
+               elog(ERROR, "SPI_exec failed");
         }
         va_end(arg_ptr);
-
-        // COMMIT
-        res = PQexec(conn, "COMMIT");
-        if (PQresultStatus(res) != PGRES_COMMAND_OK)
-        {
-            printf("COMMIT command failed\n");
-            PQclear(res);
-            PQfinish(conn);
-            exit(1);
-        }
-        PQclear(res);
     } while (hash_get_num_entries(hash_table));
 
-
-    PQfinish(conn);
+    if (SPI_finish() != SPI_OK_FINISH)
+        elog(ERROR, "SPI_finish failed");
 }
 
 // -----------------------------------------------------------------------------
