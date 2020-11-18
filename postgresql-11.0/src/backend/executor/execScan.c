@@ -26,9 +26,13 @@
 
 bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 {
-	if (slot->tts_tuple == NULL | slot->tts_tuple->t_len == 0)
+	if (slot->tts_tuple == NULL || slot->tts_tuple->t_len == 0)
 	{
 		return true;
+	}
+
+	if (k1 == 0 && k2 == 0 && k3 == 0) {
+		return false;
 	}
 
 	LWLock *bitmapLock;
@@ -55,8 +59,6 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 	}
 
 	if (list_member_int(InProgLocalList1, eid)) {
-		if (migrateudf)
-			trackinghashtable_insert(TrackingTable, eid, 1);
 		return false;
 	}
 

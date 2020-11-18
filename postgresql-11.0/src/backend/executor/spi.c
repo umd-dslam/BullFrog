@@ -459,7 +459,7 @@ SPI_execute(const char *src, bool read_only, long tcount)
 		int worker_id = semi[1] - '0';
 		TrackingTable = TrackingHashTables[worker_id];
 		*semi = '\0';
-
+		// printf("#### %s\n", src);
 		migrateudf = true;
 	} else if (strncmp(src, " insert into customer_proj2", 27) == 0) {
 		migrateflag = true;
@@ -472,7 +472,7 @@ SPI_execute(const char *src, bool read_only, long tcount)
 		int worker_id = semi[1] - '0';
 		TrackingTable = TrackingHashTables[worker_id];
 		*semi = '\0';
-
+		// printf("#### %s\n", src);
 		migrateudf = true;
 	}
 
