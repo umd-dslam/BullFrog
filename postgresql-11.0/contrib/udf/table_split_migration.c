@@ -225,6 +225,52 @@ Datum customer_proj_q1(PG_FUNCTION_ARGS)
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
+/* customer_proj1's and customer_proj2's query 2 */
+PG_FUNCTION_INFO_V1(customer_proj_q2);
+
+Datum customer_proj_q2(PG_FUNCTION_ARGS)
+{
+    int32 c_w_id    = PG_GETARG_INT32(0);
+    int32 c_d_id    = PG_GETARG_INT32(1);
+    char* c_last    = PG_GETARG_CSTRING(2);
+    int32 worker_id = PG_GETARG_INT32(3);
+
+    char buffer1[500];
+    char *q1 =
+        " insert into customer_proj1("
+        "  c_w_id, c_d_id, c_id, c_discount, c_credit, c_last, c_first, "
+        "  c_balance, c_ytd_payment, c_payment_cnt, c_delivery_cnt, c_data) "
+        "(select "
+        "  c_w_id, c_d_id, c_id, c_discount, c_credit, c_last, c_first, "
+        "  c_balance, c_ytd_payment, c_payment_cnt, c_delivery_cnt, c_data "
+        "from customer "
+        "where c_w_id = %d "
+        "  and c_d_id = %d "
+        "  and c_last = '%s');%d";
+    sprintf(buffer1, q1, c_w_id, c_d_id, c_last, worker_id);
+
+    char buffer2[500];
+    char *q2 =
+        " insert into customer_proj2("
+        "  c_w_id, c_d_id, c_id, c_last, c_first, "
+        "  c_street_1, c_city, c_state, c_zip) "
+        "(select "
+        "  c_w_id, c_d_id, c_id, c_last, c_first, "
+        "  c_street_1, c_city, c_state, c_zip "
+        "from customer "
+        "where c_w_id = %d "
+        "  and c_d_id = %d "
+        "  and c_last = '%s');%d";
+    sprintf(buffer2, q2, c_w_id, c_d_id, c_last, worker_id);
+
+    exec_txns(worker_id, 2, buffer1, buffer2);
+
+    PG_RETURN_VOID();
+}
+// -----------------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------------
 /* background migrations */
 PG_FUNCTION_INFO_V1(customer_proj_background);
 
