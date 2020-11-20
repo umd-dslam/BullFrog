@@ -60,6 +60,12 @@ tpcc=# select pid, num_tuples from (select (ctid::text::point)[0]::bigint as pid
  */
 #define NUMPAGES            1000000
 #define BITMAPSIZE          (((NUMPAGES * 2) + (SIZEOFWORD - 1)) / (SIZEOFWORD))
+// #define NUMPAGES            113505
+// #define NUMTUPLESPERPAGE    15
+// #define NUMTUPLESLASTPAGE   4
+// #define NUMTUPLES           2000000
+// #define ACTUALTUPLES        2000000
+// #define BITMAPSIZE          (((NUMTUPLES * 2) + (SIZEOFWORD - 1)) / (SIZEOFWORD))
 
 typedef struct
 {

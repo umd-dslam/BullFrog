@@ -467,7 +467,7 @@ static void FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer);
 static void OnConflict_CheckForSerializationFailure(const SERIALIZABLEXACT *reader,
 										SERIALIZABLEXACT *writer);
 
-static void txn_error_handling();
+void txn_error_handling();
 
 /*------------------------------------------------------------------------*/
 
@@ -4471,7 +4471,7 @@ FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer)
 		SetRWConflict(reader, writer);
 }
 
-static void txn_error_handling()
+void txn_error_handling()
 {
 	if (migrateflag && InProgLocalList0 != NIL) {
 		ListCell *cell = NULL;
