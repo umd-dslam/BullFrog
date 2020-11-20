@@ -195,7 +195,7 @@ static void drop_unnamed_stmt(void);
 static void log_disconnections(int code, Datum arg);
 static void enable_statement_timeout(void);
 static void disable_statement_timeout(void);
-static void post_query_tasks(void);
+void post_query_tasks(void);
 
 
 /* ----------------------------------------------------------------
@@ -882,7 +882,7 @@ pg_plan_queries(List *querytrees, int cursorOptions, ParamListInfo boundParams)
 	return stmt_list;
 }
 
-static void post_query_tasks(void)
+void post_query_tasks(void)
 {
 	/* perform post query tasks */
 	if (migrateflag)
@@ -896,11 +896,11 @@ static void post_query_tasks(void)
 				trackinghashtable_delete(TrackingTable, lfirst_int(cell));
 		}
 
-		foreach(cell, InProgLocalList1)
-		{
-			if (migrateudf)
-				trackinghashtable_insert(TrackingTable, lfirst_int(cell), 1);
-		}
+		// foreach(cell, InProgLocalList1)
+		// {
+		// 	if (migrateudf)
+		// 		trackinghashtable_insert(TrackingTable, lfirst_int(cell), 1);
+		// }
 
 		pg_list_free(InProgLocalList0, false);
 		pg_list_free(InProgLocalList1, false);
@@ -1190,8 +1190,6 @@ exec_simple_query(const char *query_string)
 
 		PortalDrop(portal, false);
 
-		post_query_tasks();
-
 		if (lnext(parsetree_item) == NULL)
 		{
 			/*
@@ -1223,6 +1221,8 @@ exec_simple_query(const char *query_string)
 			 */
 			CommandCounterIncrement();
 		}
+
+		// post_query_tasks();
 
 		/*
 		 * Tell client that we're done with this query.  Note we emit exactly
@@ -1295,13 +1295,13 @@ exec_parse_message(const char *query_string,	/* string to execute */
 	bool		save_log_statement_stats = log_statement_stats;
 	char		msec_str[32];
 
-	if (strncmp(query_string, " insert into customer_proj1", 27) == 0
-	 || strncmp(query_string, " insert into customer_proj2", 27) == 0) {
-		char* semi = strrchr(query_string, ';');
-		int worker_id = semi[1] - '0';
-		TrackingTable = TrackingHashTables[worker_id];
-		*semi = '\0';
-	}
+	// if (strncmp(query_string, " insert into customer_proj1", 27) == 0
+	//  || strncmp(query_string, " insert into customer_proj2", 27) == 0) {
+	// 	char* semi = strrchr(query_string, ';');
+	// 	int worker_id = semi[1] - '0';
+	// 	TrackingTable = TrackingHashTables[worker_id];
+	// 	*semi = '\0';
+	// }
 
 	/*
 	 * Report query to various monitoring facilities.
@@ -2105,8 +2105,6 @@ exec_execute_message(const char *portal_name, long max_rows)
 
 	receiver->rDestroy(receiver);
 
-	post_query_tasks();
-
 	if (completed)
 	{
 		if (is_xact_command)
@@ -2129,6 +2127,7 @@ exec_execute_message(const char *portal_name, long max_rows)
 			disable_statement_timeout();
 		}
 
+		// post_query_tasks();
 		/* Send appropriate CommandComplete to client */
 		EndCommand(completionTag, dest);
 	}

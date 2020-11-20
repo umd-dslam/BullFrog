@@ -4,8 +4,10 @@
 #include "storage/shmem.h"
 #include "utils/geo_decls.h"
 #include "utils/hsearch.h"
+#include "utils/timeout.h"
 #include "utils/migrate_schema.h"
 #include "executor/spi.h"
+#include "access/xact.h"
 
 #include <string.h>
 
@@ -22,6 +24,7 @@ void exec_txns(int32 worker_id, int32 count, ...)
     char* buffer;
 	if (SPI_connect() != SPI_OK_CONNECT)
 		elog(ERROR, "could not connect to SPI manager");
+    disable_timeout(STATEMENT_TIMEOUT, true);
 
     do
     {
@@ -31,8 +34,17 @@ void exec_txns(int32 worker_id, int32 count, ...)
         for(int i = 0; i < count; ++i) {
             buffer = va_arg(arg_ptr, char*);
             // TRANSACTION
-            if (SPI_exec(buffer, 0) != SPI_OK_INSERT)
-               elog(ERROR, "SPI_exec failed");
+            BeginInternalSubTransaction(NULL);
+            PG_TRY();
+            {
+                SPI_exec(buffer, 0);
+                ReleaseCurrentSubTransaction();
+            }
+            PG_CATCH();
+ 	        {
+                RollbackAndReleaseCurrentSubTransaction();
+            }
+            PG_END_TRY();
         }
         va_end(arg_ptr);
     } while (hash_get_num_entries(hash_table));

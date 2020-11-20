@@ -31,15 +31,20 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 		return true;
 	}
 
-	if (k1 == 0 && k2 == 0 && k3 == 0) {
-		return false;
-	}
-
 	LWLock *bitmapLock;
 	// FIXME: k1: c_w_id = 50, k2: c_d_id = 10, k3: c_id = 3000
 	// page size = 300
-	const uint32 page = 1;
+	const uint32 page = 128;
 	uint32 eid = (k1 * 10 + k2) * (3000 / page) + (k3 - 1) / page;
+
+	// ItemPointerData lctid = slot->tts_tuple->t_self;
+	// uint32 blockId	= (uint32) ItemPointerGetBlockNumber (&lctid);
+	// uint32 offset 	= (uint32) ItemPointerGetOffsetNumber(&lctid);
+
+	// uint32 pagesize = NUMTUPLESPERPAGE;
+	// uint32 idx = blockId * pagesize + offset;
+	// uint32 eid = idx - 1;
+
 	uint32 wordid 		= getwordid(eid);
 	uint32 lockbitid 	= getlockbitid(eid);
 	uint32 migratebitid = getmigratebitid(eid);
@@ -229,29 +234,29 @@ ExecScan(ScanState *node,
 		slot = ExecScanFetch(node, accessMtd, recheckMtd);
 
 
-		if (migrateflag)
-		{
-			// Get query's predicates
-			bool k1isNull, k2isNull, k3isNull;
-			Datum  d1 = heap_getattr(slot->tts_tuple, 1,
-									 slot->tts_tupleDescriptor, &k1isNull);
-			Datum  d2 = heap_getattr(slot->tts_tuple, 2,
-									 slot->tts_tupleDescriptor, &k2isNull);
-			Datum  d3 = heap_getattr(slot->tts_tuple, 3,
-									 slot->tts_tupleDescriptor, &k3isNull);
-			uint32 t1 = DatumGetUInt32(d1);
-			uint32 t2 = DatumGetUInt32(d2);
-			uint32 t3 = DatumGetUInt32(d3);
-			if (MigrateTuple(slot, t1, t2, t3))
-			{
-				++tuplemigratecount;
-				return slot;
-			}
-		}
-		else
-		{
+		// if (migrateflag)
+		// {
+		// 	// Get query's predicates
+		// 	bool k1isNull, k2isNull, k3isNull;
+		// 	Datum  d1 = heap_getattr(slot->tts_tuple, 1,
+		// 							 slot->tts_tupleDescriptor, &k1isNull);
+		// 	Datum  d2 = heap_getattr(slot->tts_tuple, 2,
+		// 							 slot->tts_tupleDescriptor, &k2isNull);
+		// 	Datum  d3 = heap_getattr(slot->tts_tuple, 3,
+		// 							 slot->tts_tupleDescriptor, &k3isNull);
+		// 	uint32 t1 = DatumGetUInt32(d1);
+		// 	uint32 t2 = DatumGetUInt32(d2);
+		// 	uint32 t3 = DatumGetUInt32(d3);
+		// 	if (MigrateTuple(slot, t1, t2, t3))
+		// 	{
+		// 		++tuplemigratecount;
+		// 		return slot;
+		// 	}
+		// }
+		// else
+		// {
 			return slot;
-		}
+		// }
 	}
 
 	/*
