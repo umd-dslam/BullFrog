@@ -195,7 +195,7 @@ static void drop_unnamed_stmt(void);
 static void log_disconnections(int code, Datum arg);
 static void enable_statement_timeout(void);
 static void disable_statement_timeout(void);
-static void post_query_tasks(void);
+void post_query_tasks(void);
 
 
 /* ----------------------------------------------------------------
@@ -882,7 +882,7 @@ pg_plan_queries(List *querytrees, int cursorOptions, ParamListInfo boundParams)
 	return stmt_list;
 }
 
-static void post_query_tasks(void)
+void post_query_tasks(void)
 {
 	/* perform post query tasks */
 	if (migrateflag)
@@ -891,7 +891,6 @@ static void post_query_tasks(void)
 		foreach(cell, InProgLocalList0)
 		{
 			setmigratebit(PartialBitmap, lfirst_int(cell));
-			// handle txns restart-after-abort
 			if (migrateudf)
 				trackinghashtable_delete(TrackingTable, lfirst_int(cell));
 		}
@@ -900,11 +899,6 @@ static void post_query_tasks(void)
 		{
 			if (migrateudf)
 				trackinghashtable_insert(TrackingTable, lfirst_int(cell), 1);
-			// if (getmigratebit(PartialBitmap, lfirst_int(cell)))
-			// {
-			// 	if (migrateudf)
-			// 		trackinghashtable_delete(TrackingTable, lfirst_int(cell));
-			// }
 		}
 
 		pg_list_free(InProgLocalList0, false);
@@ -1195,8 +1189,6 @@ exec_simple_query(const char *query_string)
 
 		PortalDrop(portal, false);
 
-		post_query_tasks();
-
 		if (lnext(parsetree_item) == NULL)
 		{
 			/*
@@ -1228,6 +1220,8 @@ exec_simple_query(const char *query_string)
 			 */
 			CommandCounterIncrement();
 		}
+
+		// post_query_tasks();
 
 		/*
 		 * Tell client that we're done with this query.  Note we emit exactly
@@ -2110,8 +2104,6 @@ exec_execute_message(const char *portal_name, long max_rows)
 
 	receiver->rDestroy(receiver);
 
-	post_query_tasks();
-
 	if (completed)
 	{
 		if (is_xact_command)
@@ -2134,6 +2126,7 @@ exec_execute_message(const char *portal_name, long max_rows)
 			disable_statement_timeout();
 		}
 
+		// post_query_tasks();
 		/* Send appropriate CommandComplete to client */
 		EndCommand(completionTag, dest);
 	}

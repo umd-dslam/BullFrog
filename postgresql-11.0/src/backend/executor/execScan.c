@@ -58,8 +58,6 @@ bool MigrateTuple(TupleTableSlot *slot)
 		if (getkthbit(PartialBitmap[wordid], lockbitid))
 		{
 			InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);
-			// if (migrateudf)
-			// 	trackinghashtable_insert(TrackingTable, eid, 1);
 			return false;
 		}
 
@@ -81,8 +79,6 @@ bool MigrateTuple(TupleTableSlot *slot)
 				LWLockRelease(bitmapLock);
 
 				InProgLocalList1 = pg_lappend_int(InProgLocalList1, eid);	
-				// if (migrateudf)
-				// 	trackinghashtable_insert(TrackingTable, eid, 1);
 				return false;
 			}
 		}
@@ -224,18 +220,18 @@ ExecScan(ScanState *node,
 		slot = ExecScanFetch(node, accessMtd, recheckMtd);
 
 
-		if (migrateflag)
-		{
-			if (MigrateTuple(slot))
-			{
-				++tuplemigratecount;
-				return slot;
-			}
-		}
-		else
-		{
+		// if (migrateflag)
+		// {
+		// 	if (MigrateTuple(slot))
+		// 	{
+		// 		++tuplemigratecount;
+		// 		return slot;
+		// 	}
+		// }
+		// else
+		// {
 			return slot;
-		}
+		// }
 	}
 
 	/*

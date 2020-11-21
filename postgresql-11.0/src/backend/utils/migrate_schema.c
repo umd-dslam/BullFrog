@@ -157,7 +157,7 @@ InitTrackingHashTables()
 }
 
 bool
-trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 *hval)
+trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 hval)
 {
 	hash_key_t key;
 	hash_value_t *hvalue;
@@ -169,7 +169,7 @@ trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 *hval)
 	hvalue = (hash_value_t *) hash_search(TrackingTable, (void *) &key, HASH_ENTER, &found);
 
 	if (!found) {
-		hvalue->val = *hval;
+		hvalue->val = hval;
 		// hvalue->key = key;
 	}
 

@@ -4331,6 +4331,8 @@ RollbackAndReleaseCurrentSubTransaction(void)
 	if (s->blockState == TBLOCK_SUBINPROGRESS)
 		AbortSubTransaction();
 
+	txn_error_handling();
+
 	/* And clean it up, too */
 	CleanupSubTransaction();
 
@@ -4611,6 +4613,7 @@ CommitSubTransaction(void)
 
 	/* Do the actual "commit", such as it is */
 	s->state = TRANS_COMMIT;
+	post_query_tasks();
 
 	/* Must CCI to ensure commands of subtransaction are seen as done */
 	CommandCounterIncrement();

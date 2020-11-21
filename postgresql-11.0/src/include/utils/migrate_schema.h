@@ -110,7 +110,7 @@ extern List *InProgLocalList1;
 extern void InitGlobalBitmap(void);
 extern void InitTrackingHashTables(void);
 
-extern bool trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 *hval);
+extern bool trackinghashtable_insert(HTAB* TrackingTable, uint32 hkey, uint8 hval);
 extern bool trackinghashtable_lookup(HTAB* TrackingTable, uint32 hkey);
 extern void trackinghashtable_delete(HTAB* TrackingTable, uint32 hkey);
 

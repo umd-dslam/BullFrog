@@ -47,6 +47,7 @@
 #include "utils/elog.h"
 #include "utils/palloc.h"
 
+extern void post_query_tasks(void);
 /* ----------------------------------------------------------------
  *				Section 1:	variable-length datatypes (TOAST support)
  * ----------------------------------------------------------------

@@ -4,28 +4,16 @@
 #include "storage/shmem.h"
 #include "utils/geo_decls.h"
 #include "utils/hsearch.h"
+#include "utils/timeout.h"
 #include "utils/migrate_schema.h"
 #include "executor/spi.h"
+#include "access/xact.h"
 
 #include <string.h>
-#include "libpq-fe.h"
 
 PG_MODULE_MAGIC;
 
-const char* PQ_CONN_DEFUALTS = "user=postgres password=postgres dbname=tpcc port=5432 keepalives=1"; 
-
-void do_exit(PGconn *conn, PGresult *res);
 void exec_txns(int32 worker_id, int32 count, ...);
-
-void do_exit(PGconn *conn, PGresult *res)
-{
-    fprintf(stderr, "%s\n", PQerrorMessage(conn));
-
-    PQclear(res);
-    PQfinish(conn);
-
-    exit(1);
-}
 
 void exec_txns(int32 worker_id, int32 count, ...)
 {
@@ -36,6 +24,7 @@ void exec_txns(int32 worker_id, int32 count, ...)
     char* buffer;
 	if (SPI_connect() != SPI_OK_CONNECT)
 		elog(ERROR, "could not connect to SPI manager");
+    disable_timeout(STATEMENT_TIMEOUT, true);
 
     do
     {
@@ -45,8 +34,17 @@ void exec_txns(int32 worker_id, int32 count, ...)
         for(int i = 0; i < count; ++i) {
             buffer = va_arg(arg_ptr, char*);
             // TRANSACTION
-            if (SPI_exec(buffer, 0) != SPI_OK_INSERT)
-               elog(ERROR, "SPI_exec failed");
+            BeginInternalSubTransaction(NULL);
+            PG_TRY();
+            {
+                SPI_exec(buffer, 0);
+                ReleaseCurrentSubTransaction();
+            }
+            PG_CATCH();
+ 	        {
+                RollbackAndReleaseCurrentSubTransaction();
+            }
+            PG_END_TRY();
         }
         va_end(arg_ptr);
     } while (hash_get_num_entries(hash_table));
@@ -319,6 +317,54 @@ Datum customer_proj_background(PG_FUNCTION_ARGS)
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
+/* page migrations */
+PG_FUNCTION_INFO_V1(customer_proj_page);
+
+Datum customer_proj_page(PG_FUNCTION_ARGS)
+{
+    int32 c_w_id    = PG_GETARG_INT32(0);
+    int32 c_d_id    = PG_GETARG_INT32(1);
+    int32 c_i_id_l  = PG_GETARG_INT32(2);
+    int32 c_i_id_u  = PG_GETARG_INT32(3);
+    int32 worker_id = PG_GETARG_INT32(4);
+
+    char buffer1[500];
+    char *q1 =
+        " insert into customer_proj1("
+        "  c_w_id, c_d_id, c_id, c_discount, c_credit, c_last, c_first, "
+        "  c_balance, c_ytd_payment, c_payment_cnt, c_delivery_cnt, c_data) "
+        "(select "
+        "  c_w_id, c_d_id, c_id, c_discount, c_credit, c_last, c_first, "
+        "  c_balance, c_ytd_payment, c_payment_cnt, c_delivery_cnt, c_data "
+        "from customer "
+        "where c_w_id = %d "
+        "  and c_d_id = %d "
+        "  and c_id >= %d "
+        "  and c_id <= %d);%d";
+    sprintf(buffer1, q1, c_w_id, c_d_id, c_i_id_l, c_i_id_u, worker_id);
+
+    char buffer2[500];
+    char *q2 =
+        " insert into customer_proj2("
+        "  c_w_id, c_d_id, c_id, c_last, c_first, "
+        "  c_street_1, c_city, c_state, c_zip) "
+        "(select "
+        "  c_w_id, c_d_id, c_id, c_last, c_first, "
+        "  c_street_1, c_city, c_state, c_zip "
+        "from customer "
+        "where c_w_id = %d "
+        "  and c_d_id = %d "
+        "  and c_id >= %d "
+        "  and c_id <= %d);%d";
+    sprintf(buffer2, q2, c_w_id, c_d_id, c_i_id_l, c_i_id_u, worker_id);
+
+    exec_txns(worker_id, 2, buffer1, buffer2);
+
+    PG_RETURN_VOID();
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
 PG_FUNCTION_INFO_V1(add_one);
 
 Datum
@@ -339,6 +385,12 @@ add_one(PG_FUNCTION_ARGS)
 // -----------------------------------------------------------------------------
 //                          Load into PostgreSQL
 // -----------------------------------------------------------------------------
+// DROP FUNCTION IF EXISTS customer_proj_page; 
+// CREATE FUNCTION customer_proj_page(integer, integer, integer, integer, integer) RETURNS
+// integer
+//      AS 'table_split_migration', 'customer_proj_page'
+//      LANGUAGE C STRICT;
+
 // DROP FUNCTION IF EXISTS customer_proj_background; 
 // CREATE FUNCTION customer_proj_background(integer, integer, integer, integer, integer) RETURNS
 // integer
@@ -349,6 +401,12 @@ add_one(PG_FUNCTION_ARGS)
 // CREATE FUNCTION customer_proj_q1(integer, integer, integer, integer) RETURNS
 // integer
 //      AS 'table_split_migration', 'customer_proj_q1'
+//      LANGUAGE C STRICT;
+
+// DROP FUNCTION IF EXISTS customer_proj_q2; 
+// CREATE FUNCTION customer_proj_q2(integer, integer, varchar, integer) RETURNS
+// integer
+//      AS 'table_split_migration', 'customer_proj_q2'
 //      LANGUAGE C STRICT;
 
 // DROP FUNCTION IF EXISTS customer_proj1_q1; 
