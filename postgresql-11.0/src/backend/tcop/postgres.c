@@ -889,6 +889,7 @@ static void post_query_tasks(void)
 	{
 		ListCell *cell = NULL;
 		ListCell *prev = NULL;
+		ListCell *next = NULL;
 		foreach(cell, InProgLocalList0)
 		{
 			setmigratebit(PartialBitmap, lfirst_int(cell));
@@ -897,15 +898,17 @@ static void post_query_tasks(void)
 		int volatile size = list_length(InProgLocalList1);
 		while (size > 0)
 		{
-			foreach(cell, InProgLocalList1)
+			prev = NULL;
+			for (cell = list_head(InProgLocalList1); cell; cell = next)
 			{
+				next = lnext(cell);
 				if (getmigratebit(PartialBitmap, lfirst_int(cell)))
 				{
 					size--;
-					pg_list_delete_cell(InProgLocalList1, cell, prev);
+					InProgLocalList1 = pg_list_delete_cell(InProgLocalList1, cell, prev);
 				}
-				prev = cell;
 			}
+			prev = cell;
 		}
 
 		pg_list_free(InProgLocalList0, false);
