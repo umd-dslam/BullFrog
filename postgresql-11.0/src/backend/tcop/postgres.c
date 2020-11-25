@@ -896,7 +896,8 @@ static void post_query_tasks(void)
 		}
 
 		int volatile size = list_length(InProgLocalList1);
-		while (size > 0)
+		int num = 5;
+		while (size > 0 && num >= 0)
 		{
 			prev = NULL;
 			for (cell = list_head(InProgLocalList1); cell; cell = next)
@@ -909,6 +910,7 @@ static void post_query_tasks(void)
 				}
 			}
 			prev = cell;
+			num--;
 		}
 
 		pg_list_free(InProgLocalList0, false);

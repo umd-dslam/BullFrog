@@ -34,7 +34,7 @@ bool MigrateTuple(TupleTableSlot *slot, uint32 k1, uint32 k2, uint32 k3)
 	LWLock *bitmapLock;
 	// FIXME: k1: c_w_id = 50, k2: c_d_id = 10, k3: c_id = 3000
 	// page size = 300
-	const uint32 page = 512;
+	const uint32 page = 256;
 	uint32 eid = (k1 * 10 + k2) * (3000 / page) + (k3 - 1) / page;
 	uint32 wordid 		= getwordid(eid);
 	uint32 lockbitid 	= getlockbitid(eid);
