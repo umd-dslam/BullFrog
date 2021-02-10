@@ -34,15 +34,17 @@ docker exec -it bullfrog bash
 
 ### BullFrog Experiments
 
-Now, 
+1. Now, you are able to deploy the database through the following commands:
 
-```shell
-# Changes root to postgres
-su - postgres
+    ```shell
+    # Changes root to postgres
+    su - postgres
 
-# Deploys the postgres backend
-./BullFrog/deploy.sh
-```
+    # Deploys the postgres backend
+    ./BullFrog/deploy.sh
+    ```
+
+2. Load TPC-C Dataset
 
 ### Stop Database & Container
 
@@ -58,14 +60,14 @@ su - postgres
     docker stop bullfrog
     ```
 
-### Advanced Options - Hacking Code
+## Advanced Options
+
+If you changed the codebase, you must re-build BullFrog and its OLTP-Benchmark. Also, there are many configuration files under [BullFrog-Oltpbench/config](https://github.com/DSLAM-UMD/BullFrog-Oltpbench/tree/master/config). You can pick any of them if it relates to TPC-C, but you have to use `git checkout` to switch branches of BullFrog.
 
 ```shell
-# After changing the codebase, you must re-build BullFrog and its OLTP-Benchmark.
-
 # 1. build BullFrog
 cd /home/postgres/BullFrog && ./build.sh
+
 # 2. build oltp-benchmark
 cd /home/postgres/BullFrog-Oltpbench && ./build.sh
 ```
-
