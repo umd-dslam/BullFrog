@@ -31,7 +31,7 @@ After you installed Docker, you can issue a command to pull our docker image and
 # Pulls Docker image and run it on your local machine.
 docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest
 # Enters the container.
-docker exec -it bullfrog bash
+docker exec -u postgres -it bullfrog bash
 ```
 
 ### II. BullFrog Experiments
@@ -39,14 +39,39 @@ docker exec -it bullfrog bash
 1. Now, you are able to deploy the database through the following commands:
 
     ```shell
-    # Changes root to postgres
-    su - postgres
+    cd home/postgres/BullFrog
 
     # Deploys the postgres backend
-    ./BullFrog/deploy.sh
+    ./deploy.sh
     ```
 
 2. Load TPC-C Dataset
+
+    ```shell
+    cd /home/postgres/BullFrog-Oltpbench
+
+    # Loads TPC-C dataset
+    ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true --port=5433
+
+    # Output:
+    #
+    # 21:08:25,517 (DBWorkload.java:222) INFO  - Enable on-conflict clause: false
+    # 21:08:26,184 (DBWorkload.java:311) INFO  - ======================================================================
+
+    # Benchmark:     TPCC {com.oltpbenchmark.benchmarks.tpcc.TPCCBenchmark}
+    # Configuration: config/pgtpcc_lazy_proj.xml
+    # Type:          POSTGRES
+    # Driver:        org.postgresql.Driver
+    # URL:           jdbc:postgresql://localhost:5433/tpcc
+    # Isolation:     TRANSACTION_SERIALIZABLE
+    # Scale Factor:  50.0
+
+    # 21:08:26,184 (DBWorkload.java:312) INFO  - ======================================================================
+    # 21:08:26,210 (DBWorkload.java:575) INFO  - Creating new TPCC database...
+    # 21:08:26,446 (DBWorkload.java:577) INFO  - Finished!
+    # 21:08:26,446 (DBWorkload.java:578) INFO  - ======================================================================
+    # 21:08:26,446 (DBWorkload.java:601) INFO  - Loading data into TPCC database with 8 threads...
+    ```
 
 ### III. Stop Database & Container
 
