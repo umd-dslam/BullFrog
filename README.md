@@ -62,9 +62,18 @@ docker exec -it bullfrog bash
     docker stop bullfrog
     ```
 
-## Advanced Options
 
-If you changed the codebase, you must re-build BullFrog and its OLTP-Benchmark. Also, there are many configuration files under [BullFrog-Oltpbench/config](https://github.com/DSLAM-UMD/BullFrog-Oltpbench/tree/master/config). You can pick any of them if it relates to TPC-C, but you have to use `git checkout` to switch branches of BullFrog.
+<details>
+<summary>
+<strong>Advanced Options</strong>
+</summary>
+
+<br>
+If you changed the codebase, you must re-build BullFrog and its OLTP-Benchmark. There are many configuration files under <a href="https://github.com/DSLAM-UMD/BullFrog-Oltpbench/tree/master/config">BullFrog-Oltpbench/config</a>. You can pick any of them if it relates to TPC-C, but you have to use <i>git checkout</i> to switch BullFrog's branches and build BullFrog first.
+</br>
+
+<p>
+<p>
 
 ```shell
 # 1. build BullFrog
@@ -73,3 +82,6 @@ cd /home/postgres/BullFrog && ./build.sh
 # 2. build oltp-benchmark
 cd /home/postgres/BullFrog-Oltpbench && ./build.sh
 ```
+</details>
+
+
