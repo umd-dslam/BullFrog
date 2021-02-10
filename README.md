@@ -3,7 +3,9 @@
 ## Overview
 
 
-**BullFrog** is a system that performs immediate schema migration in a single step, without advanced warning or time toprepare, including backwards-incompatible migrations. It implements concurrency control algorithms and data structures to enable concurrent processing of schema migration operations with post-migration transactions, while ensuring exactly-once migration ofall old data into the physical layout required by the new schema. We implemented BullFrog as an open source extension to PostgreSQL. Experiments using this prototype over a TPC-C based workload (supplemented to include schema migrations) show that BullFrog can achieve zero-downtime migration to non-trivial new schemas with near-invisible impact on transaction throughput and latency.
+**BullFrog** is a system that performs immediate schema migration in a single step, without advanced warning or time toprepare, including backwards-incompatible migrations. It implements *concurrency control algorithms* and *data structures* to enable concurrent processing of schema migration operations with post-migration transactions, while ensuring *exactly-once* migration of all old data into the physical layout required by the new schema. 
+
+BullFisrog  an open source extension to PostgreSQL. Experiments using this prototype over a TPC-C based workload (supplemented to include schema migrations) show that BullFrog can achieve *zero-downtime* migration to non-trivial new schemas with *near-invisible* impact on transaction throughput and latency.
 
   
 ## Benchmark
