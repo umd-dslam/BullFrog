@@ -1,12 +1,14 @@
 ## BullFrog: Online Schema Evolution via Lazy Evaluation
 
+> This repository contains an experimental prototype of the system, which is not suitable for use in production.
+
 ## Overview
 
 **BullFrog** is a system that performs immediate schema migration in a single step, without advanced warning or time to prepare, including backwards-incompatible migrations. It implements *concurrency control algorithms* and *data structures* to enable concurrent processing of schema migration operations with post-migration transactions, while ensuring *exactly-once* migration of all old data into the physical layout required by the new schema. 
 
 BullFrog is an open source extension to PostgreSQL. Experiments using this prototype over a TPC-C based workload (supplemented to include schema migrations) show that BullFrog can achieve *zero-downtime* migration to non-trivial new schemas with *near-invisible* impact on transaction throughput and latency.
 
-> This repository contains an experimental prototype of the system, which is not suitable for use in production.
+For more details, please see the upcoming blog posts or the BullFrog paper from recent and imminent [SIGMOD 2021](https://2021.sigmod.org/).
   
 ## Benchmark
 
