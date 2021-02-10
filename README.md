@@ -14,5 +14,58 @@ We extended Oltp-bench framework to measure online schema migration. You can fin
 
 ## Quick Start
 
+Using the following as a guide, we will walk you through the setup of BullFrog.
+### Docker Image
 
+This tutorial assumes you have a current version of Docker installed on your machine. If you do not have Docker installed, choose your preferred operating system below to download Docker:
+
+- [Download Docker Desktop for Mac](https://desktop.docker.com/mac/stable/Docker.dmg)
+- [Download Docker Desktop for Windows](https://desktop.docker.com/win/stable/Docker%20Desktop%20Installer.exe)
+- [Install Docker Engine on Linux](https://docs.docker.com/engine/install/)
+
+After you installed Docker, you can issue a command to pull our docker image and start a container:
+
+```shell
+# Pulls Docker image and run it on your local machine.
+docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest
+# Enters the container.
+docker exec -it bullfrog bash
+```
+
+### BullFrog Experiments
+
+Now, 
+
+```shell
+# Changes root to postgres
+su - postgres
+
+# Deploys the postgres backend
+./BullFrog/deploy.sh
+```
+
+### Stop Database & Container
+
+1. You may want to shut down the database for any reason:
+
+    ```shell
+    cd /home/postgres/BullFrog && ./shutdown.sh
+    ```
+
+2. You may stop a running container when you finish the tutorial:
+
+    ```shell
+    docker stop bullfrog
+    ```
+
+### Advanced Options - Hacking Code
+
+```shell
+# After changing the codebase, you must re-build BullFrog and its OLTP-Benchmark.
+
+# 1. build BullFrog
+cd /home/postgres/BullFrog && ./build.sh
+# 2. build oltp-benchmark
+cd /home/postgres/BullFrog-Oltpbench && ./build.sh
+```
 
