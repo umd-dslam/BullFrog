@@ -8,6 +8,7 @@
   
 ## Benchmark
 
-We extended Oltp-bench framework to measure online schema migration. You can find the experimental code in [BullFrog-Oltpbench](https://github.com/DSLAM-UMD/BullFrog-Oltpbench)
+We extended Oltp-bench framework to measure online schema migration. You can find the experimental code in [BullFrog-Oltpbench](https://github.com/DSLAM-UMD/BullFrog-Oltpbench).
+
 If you have any questions about online schema migration on TPC-C Benchmark, feel free to contact me (gangliao@cs.umd.edu).
 
