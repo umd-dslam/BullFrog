@@ -17,7 +17,7 @@ We extended Oltp-bench framework to measure online schema migration. You can fin
 ## Quick Start
 
 Using the following as a guide, we will walk you through the setup of BullFrog.
-### Docker Image
+### I. Docker Image
 
 This tutorial assumes you have a current version of Docker installed on your machine. If you do not have Docker installed, choose your preferred operating system below to download Docker:
 
@@ -34,7 +34,7 @@ docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest
 docker exec -it bullfrog bash
 ```
 
-### BullFrog Experiments
+### II. BullFrog Experiments
 
 1. Now, you are able to deploy the database through the following commands:
 
@@ -48,7 +48,7 @@ docker exec -it bullfrog bash
 
 2. Load TPC-C Dataset
 
-### Stop Database & Container
+### III. Stop Database & Container
 
 1. You may want to shut down the database for any reason:
 
