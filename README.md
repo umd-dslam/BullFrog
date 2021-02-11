@@ -43,7 +43,7 @@ docker exec -u postgres -it bullfrog bash
     cd home/postgres/BullFrog && ./deploy.sh
     ```
 
-2. Load TPC-C Dataset: Some tables may take an unusually long time to load in the docker container.
+2. Load TPC-C Dataset: Some tables may take an unusually long time (**~30-50 minutes**) to load in the docker container.
 
     ```shell
     cd /home/postgres/BullFrog-Oltpbench
