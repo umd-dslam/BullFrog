@@ -16,9 +16,7 @@ We extended Oltp-bench framework to measure online schema migration. You can fin
 
 ## Quick Start
 
-Using the following as a guide, we will walk you through the setup of BullFrog.
-
-To make the progress more smooth, we record terminal sessions and share them on the web.
+Using the following as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
 
 **[Deployment]**
 
