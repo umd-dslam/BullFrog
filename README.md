@@ -39,13 +39,11 @@ docker exec -u postgres -it bullfrog bash
 1. Now, you are able to deploy the database through the following commands:
 
     ```shell
-    cd home/postgres/BullFrog
-
     # Deploys the postgres backend
-    ./deploy.sh
+    cd home/postgres/BullFrog && ./deploy.sh
     ```
 
-2. Load TPC-C Dataset
+2. Load TPC-C Dataset: Some tables may take an unusually long time to load in the docker container.
 
     ```shell
     cd /home/postgres/BullFrog-Oltpbench
@@ -71,6 +69,21 @@ docker exec -u postgres -it bullfrog bash
     # 21:08:26,446 (DBWorkload.java:577) INFO  - Finished!
     # 21:08:26,446 (DBWorkload.java:578) INFO  - ======================================================================
     # 21:08:26,446 (DBWorkload.java:601) INFO  - Loading data into TPCC database with 8 threads...
+    # 21:50:02,260 (DBWorkload.java:605) INFO  - Finished!
+    # 21:50:02,300 (DBWorkload.java:606) INFO  - ======================================================================
+    # 21:50:02,302 (DBWorkload.java:646) INFO  - Skipping benchmark workload execution
+    ```
+
+3. Run TPC-C Benchmark
+
+    ```shell
+    # Clean shared memory via restarting database
+    pg_ctl -D $PGDATA restart 
+    # Clean tuples in new tables with new schemas
+    psql -h localhost -p 5433 tpcc -f /home/postgres/BullFrog-Oltpbench/clean_new_tables.sql
+
+    # run benchmark
+    ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml  --execute=true -s 1 -o lazy_proj --port=5433 --bgthread=proj
     ```
 
 ### III. Stop Database & Container
