@@ -24,6 +24,8 @@ Using the following as a guide, we will walk you through the setup of BullFrog. 
 
 **[Run Experiment]**
 
+<a href="https://asciinema.org/a/390487?speed=4" target="_blank"><img src="https://asciinema.org/a/390487.svg" width="70%" /></a>
+
 ### I. Docker Image
 
 This tutorial assumes you have a current version of Docker installed on your machine. If you do not have Docker installed, choose your preferred operating system below to download Docker:
@@ -47,16 +49,47 @@ docker exec -u postgres -it bullfrog bash
 
     ```shell
     # Deploys the postgres backend
-    cd home/postgres/BullFrog && ./deploy.sh
+    cd /home/postgres/BullFrog && ./deploy.sh
     ```
 
-2. Runnning a TPC-C Benchmark where data is already loaded into the database.
+2. Reloading TPC-C Dataset: Some tables may take an unusually long time (**~30-50 minutes**) to load in the docker container.
 
     ```shell
-    # Clean shared memory via restarting database
-    pg_ctl -D $PGDATA restart 
+    cd /home/postgres/BullFrog-Oltpbench
+
+    # Loads TPC-C dataset
+    ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true --port=5433
+
+    # Output:
+    #
+    # 21:08:25,517 (DBWorkload.java:222) INFO  - Enable on-conflict clause: false
+    # 21:08:26,184 (DBWorkload.java:311) INFO  - ======================================================================
+
+    # Benchmark:     TPCC {com.oltpbenchmark.benchmarks.tpcc.TPCCBenchmark}
+    # Configuration: config/pgtpcc_lazy_proj.xml
+    # Type:          POSTGRES
+    # Driver:        org.postgresql.Driver
+    # URL:           jdbc:postgresql://localhost:5433/tpcc
+    # Isolation:     TRANSACTION_SERIALIZABLE
+    # Scale Factor:  50.0
+
+    # 21:08:26,184 (DBWorkload.java:312) INFO  - ======================================================================
+    # 21:08:26,210 (DBWorkload.java:575) INFO  - Creating new TPCC database...
+    # 21:08:26,446 (DBWorkload.java:577) INFO  - Finished!
+    # 21:08:26,446 (DBWorkload.java:578) INFO  - ======================================================================
+    # 21:08:26,446 (DBWorkload.java:601) INFO  - Loading data into TPCC database with 8 threads...
+    # 21:50:02,260 (DBWorkload.java:605) INFO  - Finished!
+    # 21:50:02,300 (DBWorkload.java:606) INFO  - ======================================================================
+    # 21:50:02,302 (DBWorkload.java:646) INFO  - Skipping benchmark workload execution
+    ```
+
+3. Runnning a TPC-C Benchmark where data is already loaded into the database.
+    ```shell
     # Clean tuples in new tables with new schemas
     psql -h localhost -p 5433 tpcc -f /home/postgres/BullFrog-Oltpbench/clean_new_tables.sql
+
+    # Clean shared memory via restarting database
+    pg_ctl -D $PGDATA restart 
 
     # run benchmark
     ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml  --execute=true -s 1 -o lazy_proj --port=5433 --bgthread=proj
@@ -91,38 +124,6 @@ docker exec -u postgres -it bullfrog bash
     # 2. build oltp-benchmark
     cd /home/postgres/BullFrog-Oltpbench && ./build.sh
     ```
-
-2. Reloading TPC-C Dataset: Some tables may take an unusually long time (**~30-50 minutes**) to load in the docker container.
-
-    ```shell
-    cd /home/postgres/BullFrog-Oltpbench
-
-    # Loads TPC-C dataset
-    ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true --port=5433
-
-    # Output:
-    #
-    # 21:08:25,517 (DBWorkload.java:222) INFO  - Enable on-conflict clause: false
-    # 21:08:26,184 (DBWorkload.java:311) INFO  - ======================================================================
-
-    # Benchmark:     TPCC {com.oltpbenchmark.benchmarks.tpcc.TPCCBenchmark}
-    # Configuration: config/pgtpcc_lazy_proj.xml
-    # Type:          POSTGRES
-    # Driver:        org.postgresql.Driver
-    # URL:           jdbc:postgresql://localhost:5433/tpcc
-    # Isolation:     TRANSACTION_SERIALIZABLE
-    # Scale Factor:  50.0
-
-    # 21:08:26,184 (DBWorkload.java:312) INFO  - ======================================================================
-    # 21:08:26,210 (DBWorkload.java:575) INFO  - Creating new TPCC database...
-    # 21:08:26,446 (DBWorkload.java:577) INFO  - Finished!
-    # 21:08:26,446 (DBWorkload.java:578) INFO  - ======================================================================
-    # 21:08:26,446 (DBWorkload.java:601) INFO  - Loading data into TPCC database with 8 threads...
-    # 21:50:02,260 (DBWorkload.java:605) INFO  - Finished!
-    # 21:50:02,300 (DBWorkload.java:606) INFO  - ======================================================================
-    # 21:50:02,302 (DBWorkload.java:646) INFO  - Skipping benchmark workload execution
-    ```
-
 </details>
 
 
