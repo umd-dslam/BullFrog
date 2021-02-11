@@ -17,6 +17,15 @@ We extended Oltp-bench framework to measure online schema migration. You can fin
 ## Quick Start
 
 Using the following as a guide, we will walk you through the setup of BullFrog.
+
+To make the progress more smooth, we record terminal sessions and share them on the web.
+
+**[Deployment]**
+
+<a href="https://asciinema.org/a/390474?speed=4" target="_blank"><img src="https://asciinema.org/a/390474.svg" width="70%" /></a>
+
+**[Run Experiment]**
+
 ### I. Docker Image
 
 This tutorial assumes you have a current version of Docker installed on your machine. If you do not have Docker installed, choose your preferred operating system below to download Docker:
