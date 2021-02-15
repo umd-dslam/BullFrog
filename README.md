@@ -50,6 +50,42 @@ docker exec -u postgres -it bullfrog bash
     ```shell
     # Deploys the postgres backend
     cd /home/postgres/BullFrog && ./deploy.sh
+    # Output:
+    #
+    # +++ case $- in
+    # +++ return
+    # ++ rm -rf /home/postgres/BullFrog/build/data
+    # ++ initdb -D /home/postgres/BullFrog/build/data
+    # The files belonging to this database system will be owned by user "postgres".
+    # This user must also own the server process.
+    # 
+    # The database cluster will be initialized with locale "C".
+    # The default database encoding has accordingly been set to "SQL_ASCII".
+    # The default text search configuration will be set to "english".
+    # 
+    # Data page checksums are disabled.
+    # 
+    # creating directory /home/postgres/BullFrog/build/data ... ok
+    # creating subdirectories ... ok
+    # selecting default max_connections ... 100
+    # selecting default shared_buffers ... 128MB
+    # selecting dynamic shared memory implementation ... posix
+    # creating configuration files ... ok
+    # running bootstrap script ... Shared Global Bitmap created!
+    # ok
+    # performing post-bootstrap initialization ... ok
+    # syncing data to disk ... ok
+    # 
+    # WARNING: enabling "trust" authentication for local connections
+    # You can change this by editing pg_hba.conf or using the option -A, or
+    # --auth-local and --auth-host, the next time you run initdb.
+    # 
+    # Success. You can now start the database server using:
+    # 
+    #     pg_ctl -D /home/postgres/BullFrog/build/data -l logfile start
+    # 
+    # ++ cp /home/postgres/postgresql.conf /home/postgres/BullFrog/build/data/
+    # ++ pg_ctl -D /home/postgres/BullFrog/build/data -o '-F -p 5433' start
     ```
 
 2. Reloading TPC-C Dataset: Some tables may take an unusually long time (**~30-50 minutes**) to load in the docker container.
