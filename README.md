@@ -38,7 +38,8 @@ After you installed Docker, you can issue a command to pull our docker image and
 
 ```shell
 # Pulls Docker image and run it on your local machine.
-docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest bash
+$ docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest bash
+
 # Output:
 #
 # Unable to find image 'gangliao/bullfrog:latest' locally    
@@ -53,7 +54,8 @@ docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest bash
 # Status: Downloaded newer image for gangliao/bullfrog:latest  
 
 # Enters the container.
-docker exec -u postgres -it bullfrog bash
+$ docker exec -u postgres -it bullfrog bash
+
 # Output:
 #
 # postgres@39f01f1e6b93:/$
@@ -66,6 +68,7 @@ docker exec -u postgres -it bullfrog bash
     ```shell
     # Deploys the postgres backend
     $ cd /home/postgres/BullFrog && ./deploy.sh
+    
     # Output:
     #
     # +++ case $- in
@@ -107,8 +110,10 @@ docker exec -u postgres -it bullfrog bash
 2. Runnning a TPC-C Benchmark where data is already loaded into the database.
     ```shell
     $ cd /home/postgres/BullFrog-Oltpbench
+    
     # Clean tuples in new tables with new schemas
     $ psql -h localhost -p 5433 tpcc -f /home/postgres/BullFrog-Oltpbench/clean_new_tables.sql
+    
     # Output:
     #
     # DROP TABLE
@@ -120,6 +125,7 @@ docker exec -u postgres -it bullfrog bash
 
     # Clean shared memory via restarting database
     $ pg_ctl -D $PGDATA restart 
+    
     # Output:
     #
     # waiting for server to shut down....
@@ -140,6 +146,7 @@ docker exec -u postgres -it bullfrog bash
 
     # run benchmark
     $ ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml  --execute=true -s 1 -o lazy_proj --port=5433 --bgthread=proj
+    
     # Output:
     # ...
     # 05:37:19,860 (ThreadBench.java:473) INFO  - TERMINATE :: Waiting for all terminals to finish ..
@@ -222,6 +229,7 @@ docker exec -u postgres -it bullfrog bash
 
     ```shell
     $ cd /home/postgres/BullFrog && ./shutdown.sh
+    
     # Output:
     #
     # ++ source /home/postgres/.bashrc
