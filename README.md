@@ -106,6 +106,7 @@ docker exec -u postgres -it bullfrog bash
 
 2. Runnning a TPC-C Benchmark where data is already loaded into the database.
     ```shell
+    cd /home/postgres/BullFrog-Oltpbench
     # Clean tuples in new tables with new schemas
     psql -h localhost -p 5433 tpcc -f /home/postgres/BullFrog-Oltpbench/clean_new_tables.sql
     # Output:
