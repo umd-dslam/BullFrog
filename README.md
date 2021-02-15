@@ -18,13 +18,7 @@ We extended Oltp-bench framework to measure online schema migration. You can fin
 
 Using the following as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
 
-**[Deployment]**
-
-<a href="https://asciinema.org/a/390474?speed=4" target="_blank"><img src="https://asciinema.org/a/390474.svg" width="70%" /></a>
-
-**[Run Experiment]**
-
-<a href="https://asciinema.org/a/390487?speed=4" target="_blank"><img src="https://asciinema.org/a/390487.svg" width="70%" /></a>
+<a href="https://asciinema.org/a/391400?speed=4" target="_blank"><img src="https://asciinema.org/a/391400.svg" width="70%" /></a>
 
 ### I. Docker Image
 
@@ -107,7 +101,8 @@ $ docker exec -u postgres -it bullfrog bash
     # ++ pg_ctl -D /home/postgres/BullFrog/build/data -o '-F -p 5433' start
     ```
 
-2. Runnning a TPC-C Benchmark where data is already loaded into the database.
+2. Run a TPC-C Benchmark where data is already loaded into the database. **Re-execute this step again if the benchmark fails**.
+
     ```shell
     $ cd /home/postgres/BullFrog-Oltpbench
     
