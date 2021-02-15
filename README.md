@@ -38,7 +38,7 @@ After you installed Docker, you can issue a command to pull our docker image and
 
 ```shell
 # Pulls Docker image and run it on your local machine.
-docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest
+docker run --rm -it -d  --name bullfrog gangliao/bullfrog:latest bash
 # Output:
 #
 # Unable to find image 'gangliao/bullfrog:latest' locally    
