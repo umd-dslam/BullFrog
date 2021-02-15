@@ -18,7 +18,7 @@ We extended Oltp-bench framework to measure online schema migration. You can fin
 
 Using the following as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
 
-<a href="https://asciinema.org/a/391400?speed=4" target="_blank"><img src="https://asciinema.org/a/391400.svg" width="70%" /></a>
+<a href="https://asciinema.org/a/391400?speed=4" target="_blank"><img src="https://asciinema.org/a/391400.svg" width="90%" /></a>
 
 ### I. Docker Image
 
