@@ -65,7 +65,7 @@ docker exec -u postgres -it bullfrog bash
 
     ```shell
     # Deploys the postgres backend
-    cd /home/postgres/BullFrog && ./deploy.sh
+    $ cd /home/postgres/BullFrog && ./deploy.sh
     # Output:
     #
     # +++ case $- in
@@ -106,9 +106,9 @@ docker exec -u postgres -it bullfrog bash
 
 2. Runnning a TPC-C Benchmark where data is already loaded into the database.
     ```shell
-    cd /home/postgres/BullFrog-Oltpbench
+    $ cd /home/postgres/BullFrog-Oltpbench
     # Clean tuples in new tables with new schemas
-    psql -h localhost -p 5433 tpcc -f /home/postgres/BullFrog-Oltpbench/clean_new_tables.sql
+    $ psql -h localhost -p 5433 tpcc -f /home/postgres/BullFrog-Oltpbench/clean_new_tables.sql
     # Output:
     #
     # DROP TABLE
@@ -119,7 +119,7 @@ docker exec -u postgres -it bullfrog bash
     # CREATE INDEX
 
     # Clean shared memory via restarting database
-    pg_ctl -D $PGDATA restart 
+    $ pg_ctl -D $PGDATA restart 
     # Output:
     #
     # waiting for server to shut down....
@@ -139,7 +139,7 @@ docker exec -u postgres -it bullfrog bash
     # server started
 
     # run benchmark
-    ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml  --execute=true -s 1 -o lazy_proj --port=5433 --bgthread=proj
+    $ ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml  --execute=true -s 1 -o lazy_proj --port=5433 --bgthread=proj
     # Output:
     # ...
     # 05:37:19,860 (ThreadBench.java:473) INFO  - TERMINATE :: Waiting for all terminals to finish ..
@@ -221,7 +221,7 @@ docker exec -u postgres -it bullfrog bash
 1. You may want to shut down the database for any reason:
 
     ```shell
-    cd /home/postgres/BullFrog && ./shutdown.sh
+    $ cd /home/postgres/BullFrog && ./shutdown.sh
     # Output:
     #
     # ++ source /home/postgres/.bashrc
@@ -237,7 +237,7 @@ docker exec -u postgres -it bullfrog bash
 2. You may stop a running container when you finish the tutorial:
 
     ```shell
-    docker stop bullfrog
+    $ docker stop bullfrog
     ```
 
 
@@ -250,19 +250,19 @@ docker exec -u postgres -it bullfrog bash
 
     ```shell
     # 1. build BullFrog
-    cd /home/postgres/BullFrog && ./build.sh
+    $ cd /home/postgres/BullFrog && ./build.sh
 
     # 2. build oltp-benchmark
-    cd /home/postgres/BullFrog-Oltpbench && ./build.sh
+    $ cd /home/postgres/BullFrog-Oltpbench && ./build.sh
     ```
 
 2. Reloading TPC-C Dataset: Some tables may take an unusually long time (**~30-50 minutes**) to load in the docker container.
 
     ```shell
-    cd /home/postgres/BullFrog-Oltpbench
+    $ cd /home/postgres/BullFrog-Oltpbench
 
     # Loads TPC-C dataset
-    ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true --port=5433
+    $ ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true --port=5433
 
     # Output:
     #
