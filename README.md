@@ -101,7 +101,8 @@ $ docker exec -u postgres -it bullfrog bash
     # ++ pg_ctl -D /home/postgres/BullFrog/build/data -o '-F -p 5433' start
     ```
 
-2. Run a TPC-C Benchmark where data is already loaded into the database. **Re-execute this step again if the benchmark fails**.
+2. Run a TPC-C Benchmark where data is already loaded into the database.
+   - **Please re-execute all commands in the step 2 if the benchmark fails to run**.
 
     ```shell
     $ cd /home/postgres/BullFrog-Oltpbench
