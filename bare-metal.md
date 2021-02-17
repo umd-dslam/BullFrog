@@ -17,6 +17,7 @@ export PGDATA=$POSTGRES_INSTALLDIR/data
 
 # create installation dir
 mkdir -p $POSTGRES_INSTALLDIR
+cd 
 ./configure --prefix=$POSTGRES_INSTALLDIR --enable-cassert --enable-debug CFLAGS="-ggdb -Og -g3 -fno-omit-frame-pointer"
 
 # compile bullfrog
