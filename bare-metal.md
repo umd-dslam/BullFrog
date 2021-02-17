@@ -32,6 +32,9 @@ make install
 rm -rf $PGDATA
 initdb -D $PGDATA
 
+# set postgresql configuration file
+cp postgresql.conf $PGDATA/
+
 # you can now start the database server
 pg_ctl -D $PGDATA -o "-F -p 5433" start
 pg_ctl -D $PGDATA status
@@ -66,7 +69,8 @@ ant build
 
 ```shell
 # Clean tuples in new tables with new schemas
-$ psql -h localhost -p 5433 tpcc -f /home/postgres/BullFrog-Oltpbench/clean_new_tables.sql
+# `clean_new_tables.sql` is located in the folder `BullFrog-Oltpbench`.
+$ psql -h localhost -p 5433 tpcc -f clean_new_tables.sql
 
 # Clean shared memory via restarting database
 $ pg_ctl -D $PGDATA restart 
