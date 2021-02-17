@@ -28,14 +28,15 @@ make install
 ### 2. Deploy BullFrog
 
 ```shell
+# create a new BullFrog database
 rm -rf $PGDATA
 initdb -D $PGDATA
 
+# you can now start the database server
 pg_ctl -D $PGDATA -o "-F -p 5433" start
 pg_ctl -D $PGDATA status
 
 createdb -h localhost -p 5433 tpcc
-
 psql -h localhost -p 5433 tpcc -c "CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';"
 ```
 
