@@ -291,7 +291,7 @@ $ docker exec -u postgres -it bullfrog bash
     # 21:50:02,302 (DBWorkload.java:646) INFO  - Skipping benchmark workload execution
     ```
 
-3.  If you'd like to bare metal cases, please refer [the instructions](https://github.com/DSLAM-UMD/BullFrog/blob/migrate-projection-on-bitmap/bare-metal.md).
+3.  If you'd like to deploy BullFrog on the bare-metal server, please refer [the instructions](https://github.com/DSLAM-UMD/BullFrog/blob/migrate-projection-on-bitmap/bare-metal.md).
 
 
 </details>
