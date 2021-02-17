@@ -1,6 +1,6 @@
 ## BullFrog
 
-## 1. Build BullFrog
+### 1. Build BullFrog
 
 ```shell
 git clone https://github.com/DSLAM-UMD/BullFrog
@@ -25,7 +25,7 @@ make -j8
 make install
 ```
 
-## 2. Deploy BullFrog
+### 2. Deploy BullFrog
 
 ```shell
 rm -rf $PGDATA
@@ -39,9 +39,9 @@ createdb -h localhost -p 5433 tpcc
 psql -h localhost -p 5433 tpcc -c "CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';"
 ```
 
-# BullFrog OLTP-Benchmark
+## BullFrog OLTP-Benchmark
 
-## 1. Build BullFrog OLTP-Benchmark
+### 1. Build BullFrog OLTP-Benchmark
 
 ```shell
 git clone https://github.com/DSLAM-UMD/BullFrog-Oltpbench
@@ -53,13 +53,13 @@ ant resolve
 ant build
 ```
 
-## 2. Load TPC-C Dataset
+### 2. Load TPC-C Dataset
 
 ```shell
 ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true
 ```
 
-## 3. Run TPC-C Benchmark with Online Schema Migration
+### 3. Run TPC-C Benchmark with Online Schema Migration
 
 > Please re-execute all commands in this step if the benchmark fails to run.
 
@@ -74,7 +74,7 @@ $ pg_ctl -D $PGDATA restart
 $ ./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml  --execute=true -s 1 -o lazy_proj --port=5433 --bgthread=proj
 ```
 
-# Stop BullFrog
+## Stop BullFrog
 
 ```shell
 pg_ctl -D $PGDATA stop
