@@ -293,4 +293,6 @@ $ docker exec -u postgres -it bullfrog bash
 
 </details>
 
+3.  If you'd like to bare metal cases, please refer [the instructions](https://github.com/DSLAM-UMD/BullFrog/blob/migrate-projection-on-bitmap/bare-metal.md).
+
 
