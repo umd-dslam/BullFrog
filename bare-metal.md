@@ -42,6 +42,7 @@ pg_ctl -D $PGDATA status
 
 createdb -h localhost -p 5433 tpcc
 psql -h localhost -p 5433 tpcc -c "CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';"
+# "ERROR:  role "postgres" already exists" This error is fine. 
 ```
 
 ## BullFrog OLTP-Benchmark
