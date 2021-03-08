@@ -62,7 +62,7 @@ ant build
 ### 2. Load TPC-C Dataset
 
 ```shell
-./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true
+./oltpbenchmark -b tpcc -c config/pgtpcc_lazy_proj.xml --create=true --load=true --port=5433
 ```
 
 ### 3. Run TPC-C Benchmark with Online Schema Migration
