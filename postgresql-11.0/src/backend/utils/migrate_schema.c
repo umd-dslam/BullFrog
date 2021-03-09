@@ -4,6 +4,9 @@
 /* flag to indicate if a query is a part of a migration */
 bool migrateflag = false;
 
+/* flag to indicate if a query if a part of a background migration */
+bool bg_migrate_flag = false;
+
 /* MigrateAggHashTable: global hash table */
 HTAB *MigrateAggHashTable = NULL;
 
@@ -30,7 +33,7 @@ InitMigrateAggHashTable(void)
 	size = MIGRATE_AGG_HASH_TABLE_SIZE + NUM_MIGRATE_AGG_PARTITIONS;
 
 	MigrateAggHashTable = ShmemInitHash("Shared Migrate Agg Hash Table",
-                                        100000, size, &ctl,
+                                        1000000, size, &ctl,
                                         HASH_ELEM | HASH_BLOBS | HASH_PARTITION);
 
 	printf ("MigrateAggHashTable created.\n");
@@ -48,12 +51,12 @@ InitLocalIPAggHashTable(void)
 	ctl.keysize = sizeof(LocalAggHashKey);
 	ctl.entrysize = sizeof(LocalAggHashValue);
 
-	psize = 3050;
+	psize = 30500;
 	LocalIPAggHashTable0 = hash_create("Local Agg Hash Table For In-Progress Tuples",
 										psize, &ctl,
 										HASH_ELEM | HASH_BLOBS);
 
-	psize = 3050;
+	psize = 30500;
 	LocalIPAggHashTable1 = hash_create("Local Agg Hash Table For In-Progress Tuples",
 										psize, &ctl,
 										HASH_ELEM | HASH_BLOBS);

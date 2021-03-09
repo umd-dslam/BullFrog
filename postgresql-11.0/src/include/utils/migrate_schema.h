@@ -83,6 +83,7 @@ typedef struct localagghashvalue
 } LocalAggHashValue;
 
 extern bool migrateflag;
+extern bool bg_migrate_flag;
 
 extern HTAB *MigrateAggHashTable;
 extern HTAB *LocalIPAggHashTable0;

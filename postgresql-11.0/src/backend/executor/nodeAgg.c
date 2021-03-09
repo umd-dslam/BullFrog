@@ -1737,16 +1737,26 @@ agg_retrieve_direct(AggState *aggstate)
 			if (aggstate->grp_firstTuple == NULL)
 			{
 				outerslot = fetch_input_tuple(aggstate);
-
 				if (!TupIsNull(outerslot)) {
 					if (migrateflag) {
 						bool k1isNull, k2isNull, k3isNull;
-						uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
-													outerslot->tts_tupleDescriptor, &k1isNull));
-						uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
-													outerslot->tts_tupleDescriptor, &k2isNull));
-						uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
-													outerslot->tts_tupleDescriptor, &k3isNull));
+						uint32 k1 = 0, k2 = 0, k3 = 0;
+
+						if (bg_migrate_flag) {
+							k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+														outerslot->tts_tupleDescriptor, &k3isNull));
+							k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+														outerslot->tts_tupleDescriptor, &k2isNull));
+							k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+														outerslot->tts_tupleDescriptor, &k1isNull));
+						} else {
+							k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+														outerslot->tts_tupleDescriptor, &k1isNull));
+							k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+														outerslot->tts_tupleDescriptor, &k2isNull));
+							k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+														outerslot->tts_tupleDescriptor, &k3isNull));
+						}
 
 						// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
 						if(!migrate_tuple(k1, k2, k3))
@@ -1859,12 +1869,23 @@ agg_retrieve_direct(AggState *aggstate)
 					if (!TupIsNull(outerslot)) {
 						if (migrateflag) {
 							bool k1isNull, k2isNull, k3isNull;
-							uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
-														outerslot->tts_tupleDescriptor, &k1isNull));
-							uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
-														outerslot->tts_tupleDescriptor, &k2isNull));
-							uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
-														outerslot->tts_tupleDescriptor, &k3isNull));
+							uint32 k1 = 0, k2 = 0, k3 = 0;
+
+							if (bg_migrate_flag) {
+								k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+															outerslot->tts_tupleDescriptor, &k3isNull));
+								k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+															outerslot->tts_tupleDescriptor, &k2isNull));
+								k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+															outerslot->tts_tupleDescriptor, &k1isNull));
+							} else {
+								k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+															outerslot->tts_tupleDescriptor, &k1isNull));
+								k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+															outerslot->tts_tupleDescriptor, &k2isNull));
+								k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+															outerslot->tts_tupleDescriptor, &k3isNull));
+							}
 
 							// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
 							if(!migrate_tuple(k1, k2, k3))
@@ -2044,12 +2065,23 @@ agg_fill_hash_table(AggState *aggstate)
 
 		if (migrateflag) {
 			bool k1isNull, k2isNull, k3isNull;
-			uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
-										outerslot->tts_tupleDescriptor, &k1isNull));
-			uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
-										outerslot->tts_tupleDescriptor, &k2isNull));
-			uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
-										outerslot->tts_tupleDescriptor, &k3isNull));
+			uint32 k1 = 0, k2 = 0, k3 = 0;
+
+			if (bg_migrate_flag) {
+				k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+											outerslot->tts_tupleDescriptor, &k3isNull));
+				k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+											outerslot->tts_tupleDescriptor, &k2isNull));
+				k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+											outerslot->tts_tupleDescriptor, &k1isNull));
+			} else {
+				k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+											outerslot->tts_tupleDescriptor, &k1isNull));
+				k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+											outerslot->tts_tupleDescriptor, &k2isNull));
+				k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+											outerslot->tts_tupleDescriptor, &k3isNull));
+			}
 
 			// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
 			if(!migrate_tuple(k1, k2, k3))

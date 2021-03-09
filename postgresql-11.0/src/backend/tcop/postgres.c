@@ -944,6 +944,7 @@ post_query_tasks(void)
 		tuplemigratecount = 0;
 		count_inprogress = 0;
 		migrateflag = false;
+		bg_migrate_flag = false;
 	}
 }
 
@@ -1595,10 +1596,15 @@ exec_bind_message(StringInfo input_message)
 					(errcode(ERRCODE_UNDEFINED_PSTATEMENT),
 					 errmsg("unnamed prepared statement does not exist")));
 	}
-
-	if (strncmp(psrc->query_string, " insert into orderline_agg", 26) == 0) {
+	if (strncmp(psrc->query_string, "  insert into orderline_agg(  ", 30) == 0) {
 		// printf("%s\n", psrc->query_string);
 		migrateflag = true;
+		bg_migrate_flag = true;
+		InitLocalIPAggHashTable();
+	} else if (strncmp(psrc->query_string, " insert into orderline_agg", 26) == 0) {
+		// printf("%s\n", psrc->query_string);
+		migrateflag = true;
+		bg_migrate_flag = false;
 		InitLocalIPAggHashTable();
 	}
 

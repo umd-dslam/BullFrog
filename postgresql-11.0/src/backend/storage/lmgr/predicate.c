@@ -4491,6 +4491,7 @@ txn_error_handling() {
 		hash_destroy(LocalIPAggHashTable0);
 		hash_destroy(LocalIPAggHashTable1);
 		migrateflag = false;
+		bg_migrate_flag = false;
 	}
 }
 
