@@ -12,7 +12,7 @@ For more details, please see the upcoming blog posts or the BullFrog paper from 
   
 ### Quick Start
 
-Using the [[BullFrog Wiki]](https://github.com/DSLAM-UMD/BullFrog/wiki) as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
+Using [[BullFrog Docs]](https://github.com/DSLAM-UMD/BullFrog/wiki) as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
 
 
 ### Benchmark
