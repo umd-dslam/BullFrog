@@ -198,3 +198,25 @@ localjoinhashtable_insert(uint32 k1, uint32 k2, uint32 k3, uint32 k4, uint32 k5,
 
 	hvalue->migrateByte = hval;
 }
+
+void
+localjoinhashtable_delete(uint32 k1, uint32 k2, uint32 k3, uint32 k4, uint32 k5, uint32 k6, uint8 id)
+{
+	LocalJoinHashKey key;
+	HTAB* localhtable;
+
+	key.key1 = k1;
+	key.key2 = k2;
+	key.key3 = k3;
+	key.key4 = k4;
+	key.key5 = k5;
+	key.key6 = k6;
+
+	if (id == 0) {
+		localhtable = LocalJoinHashTable0;
+	} else {
+		localhtable = LocalJoinHashTable1;
+	}
+
+	hash_search(localhtable, (void *)&key, HASH_REMOVE, NULL);
+}

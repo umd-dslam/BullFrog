@@ -175,6 +175,7 @@ ExecNestLoop(PlanState *pstate)
 	 * qualifying join tuple.
 	 */
 	ENL1_printf("entering main loop");
+	bool k1isNull, k2isNull, k3isNull, k4isNull, k5isNull, k6isNull;
 
 	for (;;)
 	{
@@ -290,7 +291,41 @@ ExecNestLoop(PlanState *pstate)
 		 */
 
 		ENL1_printf("testing qualification");
+		uint32 t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0;
+		bool ready_to_migrate = false;
+		// printf("** %d\n", outerTupleSlot->type);
+		// printf("-- %d\n", innerTupleSlot->type);
+		if (migrateflag && outerTupleSlot->type == T_TupleTableSlot && innerTupleSlot->type == T_TupleTableSlot) {
+			ready_to_migrate = true;
+			// printf("#############\n");
+			// printf("** %d\n", outerTupleSlot == NULL);
+			// printf("** %d\n", outerTupleSlot->type);
+			// printf("** %d\n", TTS_HAS_PHYSICAL_TUPLE(outerTupleSlot));
+			// printf(":: %d\n", slot_attisnull(outerTupleSlot, 1));
+			Datum  d1 = heap_getattr(outerTupleSlot->tts_tuple, 1,
+						outerTupleSlot->tts_tupleDescriptor, &k1isNull);
+			Datum  d2 = heap_getattr(outerTupleSlot->tts_tuple, 2,
+						outerTupleSlot->tts_tupleDescriptor, &k2isNull);
+			Datum  d3 = heap_getattr(outerTupleSlot->tts_tuple, 3,
+						outerTupleSlot->tts_tupleDescriptor, &k3isNull);
+			Datum  d4 = heap_getattr(outerTupleSlot->tts_tuple, 4,
+						outerTupleSlot->tts_tupleDescriptor, &k4isNull);
+			Datum  d5 = heap_getattr(innerTupleSlot->tts_tuple, 1,
+						innerTupleSlot->tts_tupleDescriptor, &k5isNull);
+			Datum  d6 = heap_getattr(innerTupleSlot->tts_tuple, 2,
+						innerTupleSlot->tts_tupleDescriptor, &k6isNull);
+			// printf("$$$$$$$$$$$$$$$$$");
 
+			uint32 t1 = DatumGetUInt32(d1);
+			uint32 t2 = DatumGetUInt32(d2);
+			uint32 t3 = DatumGetUInt32(d3);
+			uint32 t4 = DatumGetUInt32(d4);
+			uint32 t5 = DatumGetUInt32(d5);
+			uint32 t6 = DatumGetUInt32(d6);
+
+			// printf("(ol_w_id, ol_d_id, ol_o_id, ol_number, s_w_id, s_i_id)=(%d, %d, %d, %d, %d, %d)\n",
+			// 	t1, t2, t3, t4, t5, t6);
+		}
 		if (ExecQual(joinqual, econtext))
 		{
 			node->nl_MatchedOuter = true;
@@ -317,31 +352,7 @@ ExecNestLoop(PlanState *pstate)
 				 * slot containing the result tuple using ExecProject().
 				 */
 				ENL1_printf("qualification succeeded, projecting tuple");
-				if (migrateflag) {
-					bool k1isNull, k2isNull, k3isNull, k4isNull, k5isNull, k6isNull;
-
-					Datum  d1 = heap_getattr(outerTupleSlot->tts_tuple, 1,
-								outerTupleSlot->tts_tupleDescriptor, &k1isNull);
-					Datum  d2 = heap_getattr(outerTupleSlot->tts_tuple, 2,
-								outerTupleSlot->tts_tupleDescriptor, &k2isNull);
-					Datum  d3 = heap_getattr(outerTupleSlot->tts_tuple, 3,
-								outerTupleSlot->tts_tupleDescriptor, &k3isNull);
-					Datum  d4 = heap_getattr(outerTupleSlot->tts_tuple, 4,
-								outerTupleSlot->tts_tupleDescriptor, &k4isNull);
-					Datum  d5 = heap_getattr(innerTupleSlot->tts_tuple, 1,
-								innerTupleSlot->tts_tupleDescriptor, &k5isNull);
-					Datum  d6 = heap_getattr(innerTupleSlot->tts_tuple, 2,
-								innerTupleSlot->tts_tupleDescriptor, &k6isNull);
-
-					uint32 t1 = DatumGetUInt32(d1);
-					uint32 t2 = DatumGetUInt32(d2);
-					uint32 t3 = DatumGetUInt32(d3);
-					uint32 t4 = DatumGetUInt32(d4);
-					uint32 t5 = DatumGetUInt32(d5);
-					uint32 t6 = DatumGetUInt32(d6);
-
-					// printf("(ol_w_id, ol_d_id, ol_o_id, ol_number, s_w_id, s_i_id)=(%d, %d, %d, %d, %d, %d)\n",
-					// 	t1, t2, t3, t4, t5, t6);
+				if (ready_to_migrate) {
 					if (migrate_tuple(t1, t2, t3, t4, t5, t6))
 					{
 						++tuplemigratecount;

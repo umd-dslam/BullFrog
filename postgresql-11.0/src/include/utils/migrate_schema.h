@@ -60,6 +60,7 @@ extern void localjoinhashtable_insert(uint32 k1, uint32 k2, uint32 k3, uint32 k4
 
 extern bool migratejoinhashtable_lookup(uint32 k1, uint32 k2, uint32 k3, uint32 k4, uint32 k5, uint32 k6,uint8 *hval);
 extern bool migratejoinhashtable_insert(uint32 k1, uint32 k2, uint32 k3, uint32 k4, uint32 k5, uint32 k6,uint8 *hval, bool setMigrate);
+extern void localjoinhashtable_delete(uint32 k1, uint32 k2, uint32 k3, uint32 k4, uint32 k5, uint32 k6, uint8 id);
 
 /*
  * The shared migrate join hash table is partitioned to reduce contention.

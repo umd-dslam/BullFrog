@@ -934,6 +934,7 @@ post_query_tasks(void)
 					if (mByte == 1)
 					{
 						--count_inprogress;
+						localjoinhashtable_delete(k1, k2, k3, k4, k5, k6, mByte);
 					}
 				}
 				if (count_inprogress == 0)
