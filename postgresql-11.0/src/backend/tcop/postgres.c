@@ -928,6 +928,7 @@ post_query_tasks(void)
 					if (mByte == 1)
 					{
 						--count_inprogress;
+						localagghashtable_ip_delete(k1, k2, k3, 1);
 					}
 				}
 				if (count_inprogress == 0)
@@ -1596,6 +1597,7 @@ exec_bind_message(StringInfo input_message)
 	}
 
 	if (strncmp(psrc->query_string, " insert into orderline_agg", 26) == 0) {
+		// printf("%s\n", psrc->query_string);
 		migrateflag = true;
 		InitLocalIPAggHashTable();
 	}

@@ -48,11 +48,12 @@ InitLocalIPAggHashTable(void)
 	ctl.keysize = sizeof(LocalAggHashKey);
 	ctl.entrysize = sizeof(LocalAggHashValue);
 
-	psize = 50;
+	psize = 3050;
 	LocalIPAggHashTable0 = hash_create("Local Agg Hash Table For In-Progress Tuples",
 										psize, &ctl,
 										HASH_ELEM | HASH_BLOBS);
 
+	psize = 3050;
 	LocalIPAggHashTable1 = hash_create("Local Agg Hash Table For In-Progress Tuples",
 										psize, &ctl,
 										HASH_ELEM | HASH_BLOBS);
@@ -182,4 +183,24 @@ localagghashtable_ip_insert(uint32 k1, uint32 k2, uint32 k3, uint8 hval, uint8 i
 	}
 
 	hvalue->migrateByte = hval;
+}
+
+void
+localagghashtable_ip_delete(uint32 k1, uint32 k2, uint32 k3, uint8 id)
+{
+	LocalAggHashKey key;
+	LocalAggHashValue *hvalue;
+	bool found;
+
+	key.key1 = k1;
+	key.key2 = k2;
+	key.key3 = k3;
+
+	if (id == 0) {
+		(LocalAggHashValue *) hash_search(LocalIPAggHashTable0,
+													(void *)&key, HASH_REMOVE, &found);
+	} else {
+		(LocalAggHashValue *) hash_search(LocalIPAggHashTable1,
+													(void *)&key, HASH_REMOVE, &found);
+	}
 }

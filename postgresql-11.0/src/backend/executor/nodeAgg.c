@@ -294,7 +294,6 @@ static int find_compatible_pertrans(AggState *aggstate, Aggref *newagg,
 						 Oid aggserialfn, Oid aggdeserialfn,
 						 Datum initValue, bool initValueIsNull,
 						 List *transnos);
-static bool migrate_tuple(TupleTableSlot *outerslot); 
 
 /*
  * Select the current grouping set; affects current_set and
@@ -1541,14 +1540,17 @@ ExecAgg(PlanState *pstate)
 		switch (node->phase->aggstrategy)
 		{
 			case AGG_HASHED:
+				// printf("AGG_HASHED\n");
 				if (!node->table_filled)
 					agg_fill_hash_table(node);
 				/* FALLTHROUGH */
 			case AGG_MIXED:
+			    // printf("AGG_MIXED\n");
 				result = agg_retrieve_hash_table(node);
 				break;
 			case AGG_PLAIN:
 			case AGG_SORTED:
+			    // printf("AGG_PLAIN | AGG_SORTED\n");
 				result = agg_retrieve_direct(node);
 				break;
 		}
@@ -1738,7 +1740,16 @@ agg_retrieve_direct(AggState *aggstate)
 
 				if (!TupIsNull(outerslot)) {
 					if (migrateflag) {
-						if(!migrate_tuple(outerslot))
+						bool k1isNull, k2isNull, k3isNull;
+						uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+													outerslot->tts_tupleDescriptor, &k1isNull));
+						uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+													outerslot->tts_tupleDescriptor, &k2isNull));
+						uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+													outerslot->tts_tupleDescriptor, &k3isNull));
+
+						// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
+						if(!migrate_tuple(k1, k2, k3))
 							continue;
 						else
 						{
@@ -1847,7 +1858,16 @@ agg_retrieve_direct(AggState *aggstate)
 
 					if (!TupIsNull(outerslot)) {
 						if (migrateflag) {
-							if(!migrate_tuple(outerslot))
+							bool k1isNull, k2isNull, k3isNull;
+							uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+														outerslot->tts_tupleDescriptor, &k1isNull));
+							uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+														outerslot->tts_tupleDescriptor, &k2isNull));
+							uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+														outerslot->tts_tupleDescriptor, &k3isNull));
+
+							// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
+							if(!migrate_tuple(k1, k2, k3))
 								continue;
 							else
 							{
@@ -1926,19 +1946,11 @@ agg_retrieve_direct(AggState *aggstate)
 	return NULL;
 }
 
-static bool migrate_tuple(TupleTableSlot *outerslot)
+bool migrate_tuple(uint32 k1, uint32 k2, uint32 k3)
 {
-	bool k1isNull, k2isNull, k3isNull;
 	uint8 mByte, lmByte;
 
-	uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
-								outerslot->tts_tupleDescriptor, &k1isNull));
-	uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
-								outerslot->tts_tupleDescriptor, &k2isNull));
-	uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
-								outerslot->tts_tupleDescriptor, &k3isNull));
 
-	// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
 
 	if (localagghashtable_ip_lookup(k1, k2, k3, &mByte, 0)) {
 		// key migration in-progress by the current transaction
@@ -2001,7 +2013,7 @@ static bool migrate_tuple(TupleTableSlot *outerslot)
 			 */
 
 			lmByte = 0;
-
+			migrateagghashtable_insert(k1, k2, k3, &lmByte, true);
 			localagghashtable_ip_insert(k1, k2, k3, lmByte, lmByte);
 
 			return true;
@@ -2031,7 +2043,16 @@ agg_fill_hash_table(AggState *aggstate)
 			break;
 
 		if (migrateflag) {
-			if(!migrate_tuple(outerslot))
+			bool k1isNull, k2isNull, k3isNull;
+			uint32 k1 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 1,
+										outerslot->tts_tupleDescriptor, &k1isNull));
+			uint32 k2 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 2,
+										outerslot->tts_tupleDescriptor, &k2isNull));
+			uint32 k3 = DatumGetUInt32(heap_getattr(outerslot->tts_tuple, 3,
+										outerslot->tts_tupleDescriptor, &k3isNull));
+
+			// printf("k1: %d k2: %d k3: %d\n", k1, k2, k3);
+			if(!migrate_tuple(k1, k2, k3))
 				continue;
 			else
 			{

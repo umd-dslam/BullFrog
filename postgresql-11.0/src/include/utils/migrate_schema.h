@@ -101,6 +101,7 @@ extern bool migrateagghashtable_insert(uint32 k1, uint32 k2, uint32 k3, uint8 *h
 
 extern bool localagghashtable_ip_lookup(uint32 k1, uint32 k2, uint32 k3, uint8 *hval, uint8 id);
 extern void localagghashtable_ip_insert(uint32 k1, uint32 k2, uint32 k3, uint8 hval, uint8 id);
+extern void localagghashtable_ip_delete(uint32 k1, uint32 k2, uint32 k3, uint8 id);
 
 /*
  * The shared migrate aggregate hash table is partitioned to reduce contention.

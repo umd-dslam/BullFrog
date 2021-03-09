@@ -313,4 +313,6 @@ extern Size hash_agg_entry_size(int numAggs);
 
 extern Datum aggregate_dummy(PG_FUNCTION_ARGS);
 
+extern bool migrate_tuple(uint32 k1, uint32 k2, uint32 k3); 
+
 #endif							/* NODEAGG_H */
