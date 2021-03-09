@@ -12,11 +12,8 @@ For more details, please see the upcoming blog posts or the BullFrog paper from 
   
 ### Quick Start
 
-Using the following as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
+Using the [[BullFrog Wiki]](https://github.com/DSLAM-UMD/BullFrog/wiki) as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
 
-[[Documentation]](https://github.com/DSLAM-UMD/BullFrog/wiki)
-
-<a href="https://asciinema.org/a/391400?speed=4" target="_blank"><img src="https://asciinema.org/a/391400.svg" width="90%" /></a>
 
 ### Benchmark
 
