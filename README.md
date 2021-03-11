@@ -8,8 +8,7 @@
 
 BullFrog is an open source extension to PostgreSQL. Experiments using this prototype over a TPC-C based workload (supplemented to include schema migrations) show that BullFrog can achieve *zero-downtime* migration to non-trivial new schemas with *near-invisible* impact on transaction throughput and latency.
 
-For more details, please see the upcoming blog posts or the BullFrog paper from recent and imminent [SIGMOD 2021](https://2021.sigmod.org/).
-  
+
 ### Quick Start
 
 Using [[BullFrog Docs]](https://github.com/DSLAM-UMD/BullFrog/wiki) as a guide, we will walk you through the setup of BullFrog. To make it smoother, we record terminal sessions and share them on the web.
